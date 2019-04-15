@@ -5,6 +5,8 @@ import com.vk.api.sdk.client.actors.GroupActor;
 import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.api.TransactionDao;
@@ -40,11 +42,12 @@ public class Launcher {
         context.setVk(new VkApiClient(context.getTransportClient()));
         context.setActor(new GroupActor(GROUP_ID, GROUP_TOKEN));
         context.setVCoinApi(new VCoinApi(VCOIN_ID, VCOIN_KEY, context));
+        context.setDataSource(createDataSource());
 
         Hangman hangman = new Hangman(context);
 
         TransactionWatcher watcher = new TransactionWatcher(
-                context.getVCoinApi(), new TransactionDao(), hangman.getTransferConsumer());
+                context.getVCoinApi(), new TransactionDao(context.getDataSource()), hangman.getTransferConsumer());
         context.getExecutorService().scheduleAtFixedRate(watcher, 0, 2, TimeUnit.SECONDS);
 
         try {
@@ -52,6 +55,16 @@ public class Launcher {
         } catch (ClientException | ApiException e) {
             logger.error("Long polling exception", e);
         }
+    }
+
+    public static HikariDataSource createDataSource() {
+        HikariConfig config = new HikariConfig();
+
+        config.setJdbcUrl(DATABASE_URL);
+        config.setUsername(DATABASE_USERNAME);
+        config.setPassword(DATABASE_PASSWORD);
+
+        return new HikariDataSource(config);
     }
 
     private static String getEnv(String name) {

@@ -40,5 +40,6 @@ public class HangmanSession extends GameSession {
     public void acceptPayment(Transaction transaction) {
         state.addCoins(transaction.getAmount());
         hangman.getDao().saveState(getChatId(), state);
+        sendMessage(String.format(HangmanMessages.DEPOSIT_SUCCESS, transaction.getAmount() / 1e3), screen.getKeyboard());
     }
 }

@@ -3,6 +3,7 @@ package ru.darkkeks.vcoin.game;
 import com.vk.api.sdk.client.TransportClient;
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
+import com.zaxxer.hikari.HikariDataSource;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -14,6 +15,7 @@ public class AppContext {
     private GroupActor actor;
     private TransportClient transportClient;
     private ScheduledExecutorService executorService;
+    private HikariDataSource dataSource;
 
     public VCoinApi getVCoinApi() {
         return vCoinApi;
@@ -35,6 +37,10 @@ public class AppContext {
         return transportClient;
     }
 
+    public HikariDataSource getDataSource() {
+        return dataSource;
+    }
+
     public void setVCoinApi(VCoinApi vCoinApi) {
         this.vCoinApi = vCoinApi;
     }
@@ -53,5 +59,9 @@ public class AppContext {
 
     public void setExecutorService(ScheduledExecutorService executorService) {
         this.executorService = executorService;
+    }
+
+    public void setDataSource(HikariDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 }

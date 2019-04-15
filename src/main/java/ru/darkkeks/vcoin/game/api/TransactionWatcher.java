@@ -1,8 +1,13 @@
 package ru.darkkeks.vcoin.game.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.function.Consumer;
 
 public class TransactionWatcher implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(TransactionWatcher.class);
 
     private VCoinApi api;
     private Consumer<Transaction> handler;
@@ -18,10 +23,10 @@ public class TransactionWatcher implements Runnable {
     public void run() {
         api.getTransactions(VCoinApi.RequestType.MERCHANT).thenAccept(transactions -> {
             transactionDao.filter(transactions).forEach(handler);
-        });
-
-        api.getTransactions(VCoinApi.RequestType.USER).thenAccept(transactions -> {
-            transactionDao.filter(transactions).forEach(handler);
+        }).whenComplete((aVoid, throwable) -> {
+            if(throwable != null) {
+                logger.error("Error while handling transactions", throwable);
+            }
         });
     }
 }

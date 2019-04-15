@@ -7,7 +7,7 @@ public class HangmanState {
     private String guessedLetters;
 
     public HangmanState() {
-        this(1000000000, null, null);
+        this(0, null, null);
     }
 
     public HangmanState(long coins, String word, String guessedLetters) {

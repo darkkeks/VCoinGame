@@ -40,7 +40,7 @@ public class Hangman extends Game<HangmanSession> {
 
     public Hangman(AppContext context) {
         this.context = context;
-        this.hangmanDao = new HangmanDao();
+        this.hangmanDao = new HangmanDao(context.getDataSource());
         this.generator = new WordGenerator();
 
         mainKeyboard = Keyboard.builder()
@@ -60,7 +60,7 @@ public class Hangman extends Game<HangmanSession> {
                 session.getState().addCoins(-BASE_BET);
                 startGame(session);
             } else {
-                session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, BASE_BET), mainKeyboard);
+                session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, BASE_BET / 1e3), mainKeyboard);
             }
         }));
 
@@ -86,7 +86,11 @@ public class Hangman extends Game<HangmanSession> {
             Screen<HangmanSession> screen = getScreen(session.getState());
             session.setScreen(screen);
 
-            if(session.getState().getCoins() >= amount) {
+            if(amount <= 0) {
+                session.sendMessage(HangmanMessages.AMOUNT_HAS_TO_BE_POSITIVE, screen.getKeyboard());
+            } else if (session.getState().getCoins() < amount) {
+                session.sendMessage(HangmanMessages.NOT_ENOUGH_WITHDRAW_MESSAGE, screen.getKeyboard());
+            } else {
                 session.getState().addCoins(-amount);
                 hangmanDao.saveState(session.getChatId(), session.getState());
                 context.getVCoinApi().transfer(session.getChatId(), amount)
@@ -100,8 +104,6 @@ public class Hangman extends Game<HangmanSession> {
                                 logger.error("Error while trying to transfer", throwable);
                             }
                         });
-            } else {
-                session.sendMessage(HangmanMessages.NOT_ENOUGH_WITHDRAW_MESSAGE, screen.getKeyboard());
             }
         })));
 

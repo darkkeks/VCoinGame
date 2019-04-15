@@ -16,11 +16,11 @@ public class VCoinApi {
     private static final String TRANSFER = "https://coin-without-bugs.vkforms.ru/merchant/send/";
     private static final String PAY_LINK = "https://vk.com/coin#x%d_%d_%d_1";
     private static final String FIXED_PAY_LINK = "https://vk.com/coin#x%d_%d_%d";
+    private static final int HANGMAN_PAYLOAD = 228;
 
     private static final JsonParser jsonParser = new JsonParser();
 
     private AppContext context;
-
     private ExecutorService transferExecutor;
 
     private int userId;
@@ -37,7 +37,7 @@ public class VCoinApi {
 
     private String doRequest(String url, String data) {
         try {
-            return context.getTransportClient().post(url, data).getContent();
+            return context.getTransportClient().post(url, data, "application/json").getContent();
         } catch (IOException e) {
             return null;
         }
@@ -55,7 +55,10 @@ public class VCoinApi {
             List<Transaction> transactions = new ArrayList<>();
 
             response.get("response").getAsJsonArray().forEach(element -> {
-                transactions.add(new Transaction(element.getAsJsonObject()));
+                Transaction transaction = new Transaction(element.getAsJsonObject());
+                if(transaction.getPayload() == HANGMAN_PAYLOAD) {
+                    transactions.add(transaction);
+                }
             });
 
             return transactions;
@@ -77,16 +80,16 @@ public class VCoinApi {
                         throw new IllegalStateException(result.get("error").getAsJsonObject()
                                 .get("message").getAsString());
                     }
-                    return new TransferResult(result);
+                    return new TransferResult(result.get("response").getAsJsonObject());
                 });
     }
 
     public String getPaymentLink(long amount) {
-        return String.format(PAY_LINK, userId, amount, 0);
+        return String.format(PAY_LINK, userId, amount, HANGMAN_PAYLOAD);
     }
 
     public String getFixedPaymentLink(long amount) {
-        return String.format(FIXED_PAY_LINK, userId, amount, 0);
+        return String.format(FIXED_PAY_LINK, userId, amount, HANGMAN_PAYLOAD);
     }
 
     public int getUserId() {

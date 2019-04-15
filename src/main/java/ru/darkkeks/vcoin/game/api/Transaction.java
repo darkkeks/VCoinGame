@@ -9,6 +9,7 @@ public class Transaction {
     private long amount;
     private int type;
     private int payload;
+    private long createdAt;
 
     public Transaction(JsonObject object) {
         this.id = object.get("id").getAsInt();
@@ -17,6 +18,7 @@ public class Transaction {
         this.amount = object.get("amount").getAsLong();
         this.type = object.get("type").getAsInt();
         this.payload = object.get("payload").getAsInt();
+        this.createdAt = object.get("created_at").getAsLong();
     }
 
     public int getId() {
@@ -41,5 +43,9 @@ public class Transaction {
 
     public int getPayload() {
         return payload;
+    }
+
+    public long getCreatedAt() {
+        return createdAt;
     }
 }
