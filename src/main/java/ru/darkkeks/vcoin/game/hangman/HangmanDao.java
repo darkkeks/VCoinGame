@@ -31,6 +31,7 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
     }
     @Override
     public HangmanState getState(Integer key) {
+        logger.info("Loading state (id={})", key);
         try(Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(SELECT)) {
             statement.setInt(1, key);

@@ -1,12 +1,16 @@
 package ru.darkkeks.vcoin.game.hangman;
 
 import com.vk.api.sdk.objects.messages.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.AppContext;
 import ru.darkkeks.vcoin.game.GameSession;
 import ru.darkkeks.vcoin.game.Screen;
 import ru.darkkeks.vcoin.game.api.Transaction;
 
 public class HangmanSession extends GameSession {
+
+    private static final Logger logger = LoggerFactory.getLogger(HangmanSession.class);
 
     private Hangman hangman;
     private HangmanState state;
@@ -38,6 +42,7 @@ public class HangmanSession extends GameSession {
 
     @Override
     public void acceptPayment(Transaction transaction) {
+        logger.info("Deposit(id = {}, amount = {})", getChatId(), transaction.getAmount());
         state.addCoins(transaction.getAmount());
         hangman.getDao().saveState(getChatId(), state);
         sendMessage(String.format(HangmanMessages.DEPOSIT_SUCCESS, transaction.getAmount() / 1e3), screen.getKeyboard());

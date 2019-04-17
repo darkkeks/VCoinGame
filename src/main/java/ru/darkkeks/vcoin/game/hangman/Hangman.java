@@ -19,11 +19,11 @@ public class Hangman extends Game<HangmanSession> {
 
     private static final Logger logger = LoggerFactory.getLogger(Hangman.class);
 
-    private static final int BASE_BET = 10_000_000;
-    private static final int REWARD = 20_000_000;
+    public static final int BASE_BET = 1_000_000;
+    private static final int REWARD = 2_000_000;
     private static final int WRONG_ATTEMPTS = 5;
 
-    private static final String ALPHABET = "ёйцукенгшщзхъфывапролджэячсмитьбю";
+    private static final String ALPHABET = "-ёйцукенгшщзхъфывапролджэячсмитьбю";
 
     private AppContext context;
 
@@ -48,9 +48,9 @@ public class Hangman extends Game<HangmanSession> {
                 .addButton(new KeyboardButton(HangmanMessages.PLAY, ButtonType.POSITIVE))
                 .addButton(new KeyboardButton(HangmanMessages.RULES, ButtonType.PRIMARY))
                 .newRow()
-                .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.POSITIVE))
+                .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.DEFAULT))
                 .addButton(new KeyboardButton(HangmanMessages.BALANCE, ButtonType.DEFAULT))
-                .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.NEGATIVE))
+                .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.DEFAULT))
                 .build();
 
         mainScreen = new Screen<>(mainKeyboard);
@@ -65,7 +65,11 @@ public class Hangman extends Game<HangmanSession> {
         }));
 
         mainScreen.addHandler(Handlers.exactMatch(HangmanMessages.RULES, session -> {
-            session.sendMessage(HangmanMessages.RULES_MESSAGE, mainKeyboard);
+            session.sendMessage(String.format(HangmanMessages.RULES_MESSAGE, BASE_BET / 1e3), mainKeyboard);
+        }));
+
+        mainScreen.addHandler(Handlers.exactMatch(HangmanMessages.START, session -> {
+            session.sendMessage(String.format(HangmanMessages.RULES_MESSAGE, BASE_BET / 1e3), mainKeyboard);
         }));
 
         mainScreen.addHandler(Handlers.exactMatch(HangmanMessages.DEPOSIT, this::handleDeposit));
@@ -81,7 +85,6 @@ public class Hangman extends Game<HangmanSession> {
         withdrawScreen.addHandler(Handlers.regexp("^\\d+[.,]?\\d*$", ((matcher, session) -> {
             double floatAmount = Double.valueOf(matcher.group());
             long amount = Math.round(floatAmount * 1000);
-            logger.info("Withdraw (id = {}, amount = {})", session.getChatId(), amount);
 
             Screen<HangmanSession> screen = getScreen(session.getState());
             session.setScreen(screen);
@@ -91,12 +94,15 @@ public class Hangman extends Game<HangmanSession> {
             } else if (session.getState().getCoins() < amount) {
                 session.sendMessage(HangmanMessages.NOT_ENOUGH_WITHDRAW_MESSAGE, screen.getKeyboard());
             } else {
+                logger.info("Withdraw (id = {}, amount = {})", session.getChatId(), amount);
+
                 session.getState().addCoins(-amount);
                 hangmanDao.saveState(session.getChatId(), session.getState());
                 context.getVCoinApi().transfer(session.getChatId(), amount)
                         .whenComplete((transferResult, throwable) -> {
                             if(throwable == null) {
-                                session.sendMessage(HangmanMessages.SUCCESS_WITHDRAW_MESSAGE, screen.getKeyboard());
+                                session.sendMessage(String.format(HangmanMessages.SUCCESS_WITHDRAW_MESSAGE,
+                                        amount / 1e3), screen.getKeyboard());
                             } else {
                                 session.getState().addCoins(amount);
                                 hangmanDao.saveState(session.getChatId(), session.getState());
@@ -117,9 +123,9 @@ public class Hangman extends Game<HangmanSession> {
                 .newRow()
                 .addButton(new KeyboardButton(HangmanMessages.GIVE_UP, ButtonType.NEGATIVE))
                 .newRow()
-                .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.POSITIVE))
+                .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.DEFAULT))
                 .addButton(new KeyboardButton(HangmanMessages.BALANCE, ButtonType.DEFAULT))
-                .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.NEGATIVE))
+                .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.DEFAULT))
                 .build();
 
         gameScreen = new Screen<>(gameKeyboard);
@@ -193,6 +199,9 @@ public class Hangman extends Game<HangmanSession> {
 
     private void endGame(HangmanSession session, boolean win, int wrong) {
         HangmanState state = session.getState();
+
+        logger.info("GameEnd(user = {}, win = {}, wrong = {}", session.getChatId(), win, wrong);
+
         if(win) {
             state.addCoins(REWARD);
 
@@ -224,7 +233,7 @@ public class Hangman extends Game<HangmanSession> {
 
     private void handleDeposit(HangmanSession session) {
         session.sendMessage(String.format(HangmanMessages.DEPOSIT_MESSAGE,
-                context.getVCoinApi().getPaymentLink(1000)), session.getScreen().getKeyboard());
+                context.getVCoinApi().getPaymentLink(BASE_BET)), session.getScreen().getKeyboard());
     }
 
     private void handleWithdraw(HangmanSession session) {

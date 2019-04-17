@@ -22,7 +22,7 @@ public class Launcher {
 
     private static final Logger logger = LoggerFactory.getLogger(Launcher.class);
 
-    private static final int THREADS = 16;
+    private static final int THREADS = 32;
 
     private static final int VCOIN_ID = Integer.valueOf(getEnv("VCOIN_ID"));
     private static final String VCOIN_KEY = getEnv("VCOIN_KEY");
@@ -57,7 +57,7 @@ public class Launcher {
         }
     }
 
-    public static HikariDataSource createDataSource() {
+    private static HikariDataSource createDataSource() {
         HikariConfig config = new HikariConfig();
 
         config.setJdbcUrl(DATABASE_URL);

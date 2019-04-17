@@ -8,7 +8,6 @@ public class TransferResult {
     private long current;
 
     public TransferResult(JsonObject object) {
-        System.out.println(object.toString());
         id = object.get("id").getAsInt();
         amount = object.get("amount").getAsLong();
         current = object.get("current").getAsLong();
