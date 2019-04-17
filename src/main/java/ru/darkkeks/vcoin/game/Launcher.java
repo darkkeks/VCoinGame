@@ -13,6 +13,7 @@ import ru.darkkeks.vcoin.game.api.TransactionDao;
 import ru.darkkeks.vcoin.game.api.TransactionWatcher;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
+import ru.darkkeks.vcoin.game.vk.MessageBatcher;
 
 import java.util.Optional;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -26,6 +27,7 @@ public class Launcher {
 
     private static final int VCOIN_ID = Integer.valueOf(getEnv("VCOIN_ID"));
     private static final String VCOIN_KEY = getEnv("VCOIN_KEY");
+    private static final int VCOIN_PAYLOAD = Integer.valueOf(getEnv("VCOIN_PAYLOAD"));
 
     private static final int GROUP_ID = Integer.valueOf(getEnv("GROUP_ID"));
     private static final String GROUP_TOKEN = getEnv("GROUP_TOKEN");
@@ -41,8 +43,9 @@ public class Launcher {
         context.setTransportClient(new HttpTransportClient());
         context.setVk(new VkApiClient(context.getTransportClient()));
         context.setActor(new GroupActor(GROUP_ID, GROUP_TOKEN));
-        context.setVCoinApi(new VCoinApi(VCOIN_ID, VCOIN_KEY, context));
+        context.setVCoinApi(new VCoinApi(VCOIN_ID, VCOIN_KEY, VCOIN_PAYLOAD, context));
         context.setDataSource(createDataSource());
+        context.setMessageBatcher(new MessageBatcher(context));
 
         Hangman hangman = new Hangman(context);
 

@@ -37,11 +37,8 @@ public abstract class GameSession {
         if(attachment != null) {
             query.attachment(attachment);
         }
-        try {
-            query.execute();
-        } catch (ApiException | ClientException e) {
-            logger.error("Api error", e);
-        }
+
+        context.getMessageBatcher().sendMessage(query);
     }
 
     public abstract void acceptMessage(Message message);

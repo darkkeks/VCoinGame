@@ -26,7 +26,7 @@ dependencies {
 }
 
 tasks.withType(JavaExec) {
-    file('.env').readLines().each() {
+    file(envFile).readLines().each() {
         def (key, value) = it.split('=', 2)
         environment key, value
     }

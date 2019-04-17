@@ -16,7 +16,6 @@ public class VCoinApi {
     private static final String TRANSFER = "https://coin-without-bugs.vkforms.ru/merchant/send/";
     private static final String PAY_LINK = "https://vk.com/coin#x%d_%d_%d_1";
     private static final String FIXED_PAY_LINK = "https://vk.com/coin#x%d_%d_%d";
-    private static final int HANGMAN_PAYLOAD = 228;
 
     private static final JsonParser jsonParser = new JsonParser();
 
@@ -25,10 +24,12 @@ public class VCoinApi {
 
     private int userId;
     private String apiKey;
+    private int payload;
 
-    public VCoinApi(int userId, String apiKey, AppContext context) {
+    public VCoinApi(int userId, String apiKey, int payload, AppContext context) {
         this.userId = userId;
         this.apiKey = apiKey;
+        this.payload = payload;
         this.context = context;
 
         // Has to be one thread, so we never do concurrent transfers
@@ -56,7 +57,7 @@ public class VCoinApi {
 
             response.get("response").getAsJsonArray().forEach(element -> {
                 Transaction transaction = new Transaction(element.getAsJsonObject());
-                if(transaction.getPayload() == HANGMAN_PAYLOAD) {
+                if(transaction.getPayload() == payload) {
                     transactions.add(transaction);
                 }
             });
@@ -85,11 +86,11 @@ public class VCoinApi {
     }
 
     public String getPaymentLink(long amount) {
-        return String.format(PAY_LINK, userId, amount, HANGMAN_PAYLOAD);
+        return String.format(PAY_LINK, userId, amount, payload);
     }
 
     public String getFixedPaymentLink(long amount) {
-        return String.format(FIXED_PAY_LINK, userId, amount, HANGMAN_PAYLOAD);
+        return String.format(FIXED_PAY_LINK, userId, amount, payload);
     }
 
     public int getUserId() {
