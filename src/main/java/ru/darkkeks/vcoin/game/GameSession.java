@@ -1,18 +1,12 @@
 package ru.darkkeks.vcoin.game;
 
-import com.vk.api.sdk.exceptions.ApiException;
-import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.objects.messages.Message;
 import com.vk.api.sdk.queries.messages.MessagesSendQuery;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.api.Transaction;
 import ru.darkkeks.vcoin.game.vk.VkUtil;
 import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 
 public abstract class GameSession {
-
-    private static final Logger logger = LoggerFactory.getLogger(GameSession.class);
 
     private AppContext context;
     private int chatId;

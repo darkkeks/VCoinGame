@@ -14,7 +14,7 @@ public class TransactionDao {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionDao.class);
 
-    private static final String SELECT = "SELECT tid FROM hangman_transactions";
+    private static final String SELECT = "SELECT tid FROM hangman_transactions LIMIT 100";
     private static final String INSERT = "INSERT INTO hangman_transactions " +
             "(from_id, to_id, amount, created_at, tid) VALUES (?, ?, ?, ?, ?)";
 

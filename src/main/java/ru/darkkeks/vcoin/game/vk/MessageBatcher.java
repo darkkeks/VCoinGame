@@ -18,7 +18,7 @@ public class MessageBatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageBatcher.class);
 
-    private static final int PERIOD_MS = 75; // should be >= 50
+    private static final int PERIOD_MS = 60; // should be >= 50
     private static final int MAX_BATCH_SIZE = 25;
 
     private AppContext appContext;
@@ -42,7 +42,12 @@ public class MessageBatcher {
             }
         }
 
+        if(queries.size() == MAX_BATCH_SIZE) {
+            logger.warn("Message backlog, {} messages still in queue", messageQueue.size());
+        }
+
         if(!queries.isEmpty()) {
+            logger.info("Sending batch of size {}", queries.size());
             try {
                 appContext.getVk().execute().batch(appContext.getActor(), queries).execute();
             } catch (ApiException | ClientException e) {

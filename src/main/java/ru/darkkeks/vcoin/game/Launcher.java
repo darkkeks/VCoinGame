@@ -5,6 +5,9 @@ import com.vk.api.sdk.client.actors.GroupActor;
 import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
+import com.vk.api.sdk.objects.enums.MessagesFilter;
+import com.vk.api.sdk.objects.messages.Message;
+import com.vk.api.sdk.objects.messages.responses.GetConversationsResponse;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ import ru.darkkeks.vcoin.game.api.TransactionDao;
 import ru.darkkeks.vcoin.game.api.TransactionWatcher;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
+import ru.darkkeks.vcoin.game.hangman.HangmanSession;
 import ru.darkkeks.vcoin.game.vk.MessageBatcher;
 
 import java.util.Optional;
@@ -53,10 +57,27 @@ public class Launcher {
                 context.getVCoinApi(), new TransactionDao(context.getDataSource()), hangman.getTransferConsumer());
         context.getExecutorService().scheduleAtFixedRate(watcher, 0, 2, TimeUnit.SECONDS);
 
+
+        GameBot<HangmanSession> game = new GameBot<>(context, hangman);
+
+        try {
+            GetConversationsResponse unread = context.getVk().messages().getConversations(context.getActor())
+                    .count(200)
+                    .filter(MessagesFilter.UNREAD)
+                    .execute();
+
+            unread.getItems().forEach(conversation -> {
+                Message message = conversation.getLastMessage();
+                game.messageNew(context.getActor().getId(), message);
+            });
+        } catch (ApiException | ClientException e) {
+            logger.error("Can't get unread conversations", e);
+        }
+
         //noinspection InfiniteLoopStatement
         while(true) {
             try {
-                new GameBot<>(context, hangman).run();
+                game.run();
             } catch (ClientException | ApiException e) {
                 logger.error("Long polling exception", e);
             }
