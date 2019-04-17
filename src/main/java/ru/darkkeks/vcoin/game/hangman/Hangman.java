@@ -23,7 +23,7 @@ public class Hangman extends Game<HangmanSession> {
     private static final int REWARD = 2_000_000;
     private static final int WRONG_ATTEMPTS = 5;
 
-    private static final String ALPHABET = "-ёйцукенгшщзхъфывапролджэячсмитьбю";
+    private static final String ALPHABET = "ёйцукенгшщзхъфывапролджэячсмитьбю";
 
     private AppContext context;
 
