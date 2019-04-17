@@ -50,10 +50,13 @@ public class Launcher {
                 context.getVCoinApi(), new TransactionDao(context.getDataSource()), hangman.getTransferConsumer());
         context.getExecutorService().scheduleAtFixedRate(watcher, 0, 2, TimeUnit.SECONDS);
 
-        try {
-            new GameBot<>(context, hangman).run();
-        } catch (ClientException | ApiException e) {
-            logger.error("Long polling exception", e);
+        //noinspection InfiniteLoopStatement
+        while(true) {
+            try {
+                new GameBot<>(context, hangman).run();
+            } catch (ClientException | ApiException e) {
+                logger.error("Long polling exception", e);
+            }
         }
     }
 
