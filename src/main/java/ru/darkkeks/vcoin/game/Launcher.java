@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.api.TransactionDao;
 import ru.darkkeks.vcoin.game.api.TransactionWatcher;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
+import ru.darkkeks.vcoin.game.callback.HttpServer;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
 import ru.darkkeks.vcoin.game.hangman.HangmanSession;
 import ru.darkkeks.vcoin.game.vk.MessageBatcher;
@@ -22,12 +23,13 @@ import ru.darkkeks.vcoin.game.vk.MessageBatcher;
 import java.util.Optional;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class Launcher {
 
     private static final Logger logger = LoggerFactory.getLogger(Launcher.class);
 
-    private static final int THREADS = 32;
+    private static final int THREADS = 16;
 
     private static final int VCOIN_ID = Integer.valueOf(getEnv("VCOIN_ID"));
     private static final String VCOIN_KEY = getEnv("VCOIN_KEY");
@@ -35,13 +37,17 @@ public class Launcher {
 
     private static final int GROUP_ID = Integer.valueOf(getEnv("GROUP_ID"));
     private static final String GROUP_TOKEN = getEnv("GROUP_TOKEN");
+    private static final String CALLBACK_SECRET = getEnv("CALLBACK_SECRET");
 
     private static final String DATABASE_URL = getEnv("DATABASE_URL");
     private static final String DATABASE_USERNAME = getEnv("DATABASE_USERNAME");
     private static final String DATABASE_PASSWORD = getEnv("DATABASE_PASSWORD");
 
-    public static void main(String[] args) {
-        AppContext context = new AppContext();
+    private AppContext context;
+    private Hangman hangman;
+
+    private void start() {
+        context = new AppContext();
 
         context.setExecutorService(new ScheduledThreadPoolExecutor(THREADS));
         context.setTransportClient(new HttpTransportClient());
@@ -51,36 +57,55 @@ public class Launcher {
         context.setDataSource(createDataSource());
         context.setMessageBatcher(new MessageBatcher(context));
 
-        Hangman hangman = new Hangman(context);
+        hangman = new Hangman(context);
 
         TransactionWatcher watcher = new TransactionWatcher(
                 context.getVCoinApi(), new TransactionDao(context.getDataSource()), hangman.getTransferConsumer());
         context.getExecutorService().scheduleAtFixedRate(watcher, 0, 2, TimeUnit.SECONDS);
 
+        startLongPoll();
+    }
 
-        GameBot<HangmanSession> game = new GameBot<>(context, hangman);
+    private void startCallback() {
+        HttpServer server = new HttpServer(8080);
+        GameBotCallback<HangmanSession> game = new GameBotCallback<>(context, hangman, CALLBACK_SECRET);
+        server.run(game);
+    }
 
-        try {
-            GetConversationsResponse unread = context.getVk().messages().getConversations(context.getActor())
-                    .count(200)
-                    .filter(MessagesFilter.UNREAD)
-                    .execute();
-
-            unread.getItems().forEach(conversation -> {
-                Message message = conversation.getLastMessage();
-                game.messageNew(context.getActor().getId(), message);
-            });
-        } catch (ApiException | ClientException e) {
-            logger.error("Can't get unread conversations", e);
-        }
+    private void startLongPoll() {
+        GameBotLongPoll<HangmanSession> game = new GameBotLongPoll<>(context, hangman);
 
         //noinspection InfiniteLoopStatement
         while(true) {
+            processUnread(message -> game.messageNew(context.getActor().getId(), message));
             try {
                 game.run();
             } catch (ClientException | ApiException e) {
                 logger.error("Long polling exception", e);
             }
+        }
+    }
+
+    private void processUnread(Consumer<Message> consumer) {
+        try {
+            for(int offset = 0; ; offset += 200) {
+                GetConversationsResponse unread = context.getVk().messages().getConversations(context.getActor())
+                        .count(200)
+                        .offset(offset)
+                        .filter(MessagesFilter.UNREAD)
+                        .execute();
+
+                unread.getItems().forEach(conversation -> {
+                    Message message = conversation.getLastMessage();
+                    consumer.accept(message);
+                });
+
+                if(unread.getCount() <= offset + 200) {
+                    break;
+                }
+            }
+        } catch (ApiException | ClientException e) {
+            logger.error("Can't get unread conversations", e);
         }
     }
 
@@ -98,4 +123,7 @@ public class Launcher {
         return Optional.ofNullable(System.getenv(name)).orElseThrow(() -> new IllegalStateException("Env " + name));
     }
 
+    public static void main(String[] args) {
+        new Launcher().start();
+    }
 }
