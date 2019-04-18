@@ -82,6 +82,8 @@ public class Launcher {
                 game.run();
             } catch (ClientException | ApiException e) {
                 logger.error("Long polling exception", e);
+            } catch (Exception e) {
+                logger.error("Unknown exception", e);
             }
         }
     }
@@ -100,12 +102,14 @@ public class Launcher {
                     consumer.accept(message);
                 });
 
-                if(unread.getCount() <= offset + 200) {
+                if(unread.getCount() < offset + 200) {
                     break;
                 }
             }
         } catch (ApiException | ClientException e) {
             logger.error("Can't get unread conversations", e);
+        } catch (Exception e) {
+            logger.error("Unknown exception", e);
         }
     }
 
