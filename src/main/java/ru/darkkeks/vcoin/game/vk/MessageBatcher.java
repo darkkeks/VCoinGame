@@ -19,7 +19,7 @@ public class MessageBatcher {
 
     private static final Logger logger = LoggerFactory.getLogger(MessageBatcher.class);
 
-    private static final int PERIOD_MS = 60; // should be >= 50
+    private static final int PERIOD_MS = 75; // should be >= 50
     private static final int MAX_BATCH_SIZE = 25;
 
     private AppContext appContext;
@@ -29,7 +29,10 @@ public class MessageBatcher {
         this.appContext = appContext;
         this.messageQueue = new LinkedBlockingQueue<>();
 
-        appContext.getExecutorService().scheduleAtFixedRate(this::flush, 0, PERIOD_MS, TimeUnit.MILLISECONDS);
+        ScheduledExecutorService executor = appContext.getExecutorService();
+        executor.scheduleAtFixedRate(() -> {
+            executor.submit(this::flush);
+        }, 0, PERIOD_MS, TimeUnit.MILLISECONDS);
     }
 
     private void flush() {
