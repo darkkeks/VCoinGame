@@ -97,9 +97,11 @@ public class Launcher {
                         .filter(MessagesFilter.UNREAD)
                         .execute();
 
-                unread.getItems().forEach(conversation -> {
-                    Message message = conversation.getLastMessage();
-                    consumer.accept(message);
+                context.getExecutorService().submit(() -> {
+                    unread.getItems().forEach(conversation -> {
+                        Message message = conversation.getLastMessage();
+                        consumer.accept(message);
+                    });
                 });
 
                 if(unread.getCount() < offset + 200) {

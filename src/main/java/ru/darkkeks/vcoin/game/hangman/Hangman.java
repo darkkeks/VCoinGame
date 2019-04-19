@@ -9,9 +9,7 @@ import ru.darkkeks.vcoin.game.vk.keyboard.ButtonType;
 import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 import ru.darkkeks.vcoin.game.vk.keyboard.KeyboardButton;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -24,6 +22,12 @@ public class Hangman extends Game<HangmanSession> {
     private static final int WRONG_ATTEMPTS = 5;
 
     private static final String ALPHABET = "ёйцукенгшщзхъфывапролджэячсмитьбю";
+    private static Map<String, String> CHAR_REPLACE;
+
+    static {
+        CHAR_REPLACE = new HashMap<>();
+        CHAR_REPLACE.put("ё", "е");
+    }
 
     private AppContext context;
 
@@ -228,6 +232,7 @@ public class Hangman extends Game<HangmanSession> {
         String text = message.getText().trim().toLowerCase();
         if(text.length() != 1) return null;
         if(!ALPHABET.contains(text)) return null;
+        if(CHAR_REPLACE.containsKey(text)) return CHAR_REPLACE.get(text);
         return text;
     }
 
