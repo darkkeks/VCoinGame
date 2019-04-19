@@ -9,6 +9,8 @@ public class HangmanMessages {
     public static final String DEPOSIT = "💰 Пополнить баланс";
     public static final String BALANCE = "💰 Баланс";
     public static final String WITHDRAW = "⏪ Вывести";
+    public static final String FOLLOW_MESSAGE = "✅ Кстати, Вы можете @vcoingame1 (подписаться на нас), чтобы следить " +
+                                                "за новостями и участвовать в конкурсах!";
     public static final String SUCCESS_WITHDRAW_MESSAGE = "✅ %.3f монет было успешно выведено!";
     public static final String NOT_ENOUGH_WITHDRAW_MESSAGE = "😢 На Вашем балансе недостаточно средств :(";
     public static final String GIVE_UP = "🏳️ Сдаться";
