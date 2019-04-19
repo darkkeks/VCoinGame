@@ -29,6 +29,8 @@ public class Hangman extends Game<HangmanSession> {
         CHAR_REPLACE.put("ё", "е");
     }
 
+    private Random random = new Random();
+
     private AppContext context;
 
     private HangmanDao hangmanDao;
@@ -141,6 +143,15 @@ public class Hangman extends Game<HangmanSession> {
         gameScreen.addHandler(new MessageHandler<>(message -> extractLetter(message) != null, (message, session) -> {
             String letter = extractLetter(message);
             assert letter != null;
+            CHAR_REPLACE.forEach((from, to) -> {
+                HangmanState state = session.getState();
+                if(state.getWord().contains(from)) {
+                    state.setWord(state.getWord().replace(from, to));
+                }
+                if(state.getGuessedLetters().contains(from)) {
+                    state.setGuessedLetters(state.getGuessedLetters().replace(from, to));
+                }
+            });
             if(session.getState().getGuessedLetters().contains(letter)) {
                 session.sendMessage(HangmanMessages.LETTER_USED_ALREADY, gameKeyboard);
             } else {
@@ -170,7 +181,7 @@ public class Hangman extends Game<HangmanSession> {
         char[] result = word.toCharArray();
         Arrays.fill(result, '*');
 
-        List<Integer> wrongAttempts = new ArrayList<>();
+        Set<Integer> wrongAttempts = new HashSet<>();
         session.getState().getGuessedLetters().chars().forEach(ch -> {
             boolean used = false;
             for (int i = 0; i < word.length(); ++i) {
@@ -209,14 +220,26 @@ public class Hangman extends Game<HangmanSession> {
         if(win) {
             state.addCoins(REWARD);
 
-            session.sendMessage(HangmanMessages.WIN_MESSAGE + "\n\n" +
-                    HangmanMessages.WORD_MESSAGE + state.getWord(), HangmanMessages.IMAGES[wrong], mainKeyboard);
-        } else if(wrong != -1) {
-            session.sendMessage(HangmanMessages.LOSE_MESSAGE + "\n\n" +
-                    HangmanMessages.WORD_MESSAGE + state.getWord(), HangmanMessages.IMAGES[wrong], mainKeyboard);
+            String message = HangmanMessages.WIN_MESSAGE + "\n\n" +
+                    HangmanMessages.WORD_MESSAGE + state.getWord();
+
+            if(random.nextDouble() < 0.1) {
+                message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
+            }
+
+            session.sendMessage(message, HangmanMessages.IMAGES[wrong], mainKeyboard);
         } else {
-            session.sendMessage(HangmanMessages.LOSE_MESSAGE + "\n\n" +
-                    HangmanMessages.WORD_MESSAGE + state.getWord(), mainKeyboard);
+            String message = HangmanMessages.LOSE_MESSAGE + "\n\n" + HangmanMessages.WORD_MESSAGE + state.getWord();
+
+            if(random.nextDouble() < 0.1) {
+                message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
+            }
+
+            if(wrong != -1) {
+                session.sendMessage(message, HangmanMessages.IMAGES[wrong], mainKeyboard);
+            } else {
+                session.sendMessage(message, mainKeyboard);
+            }
         }
 
         session.setScreen(mainScreen);
