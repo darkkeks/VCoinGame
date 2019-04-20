@@ -28,8 +28,6 @@ dependencies {
 
 //    implementation 'com.vk.api:sdk:1.0.0-public'
 
-
-
     implementation 'io.netty:netty-all:4.1.35.Final'
     implementation 'com.zaxxer:HikariCP:3.3.1'
     implementation 'org.postgresql:postgresql:42.2.5'

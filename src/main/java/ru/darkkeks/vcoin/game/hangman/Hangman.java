@@ -215,26 +215,23 @@ public class Hangman extends Game<HangmanSession> {
     private void endGame(HangmanSession session, boolean win, int wrong) {
         HangmanState state = session.getState();
 
-        logger.info("GameEnd(user = {}, win = {}, wrong = {}", session.getChatId(), win, wrong);
+        logger.info("GameEnd(user = {}, win = {}, wrong = {})", session.getChatId(), win, wrong);
+
+        String message = (win ? HangmanMessages.WIN_MESSAGE : HangmanMessages.LOSE_MESSAGE);
+        message += "\n\n";
+        message += String.format(HangmanMessages.WORD_MESSAGE, state.getWord());
+
+        if(!context.getFollowerManager().isFollower(session.getChatId())) {
+            if(random.nextDouble() < 0.1) {
+                message += "\n\n";
+                message += HangmanMessages.FOLLOW_MESSAGE;
+            }
+        }
 
         if(win) {
             state.addCoins(REWARD);
-
-            String message = HangmanMessages.WIN_MESSAGE + "\n\n" +
-                    HangmanMessages.WORD_MESSAGE + state.getWord();
-
-            if(random.nextDouble() < 0.1) {
-                message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
-            }
-
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], mainKeyboard);
         } else {
-            String message = HangmanMessages.LOSE_MESSAGE + "\n\n" + HangmanMessages.WORD_MESSAGE + state.getWord();
-
-            if(random.nextDouble() < 0.1) {
-                message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
-            }
-
             if(wrong != -1) {
                 session.sendMessage(message, HangmanMessages.IMAGES[wrong], mainKeyboard);
             } else {

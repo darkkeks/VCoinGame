@@ -52,7 +52,7 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
 
     @Override
     public void saveState(Integer key, HangmanState state) {
-        logger.info("Saved state (id={}, coins={}, word={}, letters={}", key, state.getCoins(),
+        logger.info("Saved state (id={}, coins={}, word={}, letters={})", key, state.getCoins(),
                 state.getWord(), state.getGuessedLetters());
 
         try(Connection connection = dataSource.getConnection();

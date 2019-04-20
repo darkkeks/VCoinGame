@@ -5,6 +5,7 @@ import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
 import com.zaxxer.hikari.HikariDataSource;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
+import ru.darkkeks.vcoin.game.vk.FollowerManager;
 import ru.darkkeks.vcoin.game.vk.MessageBatcher;
 
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,6 +19,7 @@ public class AppContext {
     private ScheduledExecutorService executorService;
     private HikariDataSource dataSource;
     private MessageBatcher messageBatcher;
+    private FollowerManager followerManager;
 
     public VCoinApi getVCoinApi() {
         return vCoinApi;
@@ -47,6 +49,10 @@ public class AppContext {
         return messageBatcher;
     }
 
+    public FollowerManager getFollowerManager() {
+        return followerManager;
+    }
+
     public void setVCoinApi(VCoinApi vCoinApi) {
         this.vCoinApi = vCoinApi;
     }
@@ -73,5 +79,9 @@ public class AppContext {
 
     public void setMessageBatcher(MessageBatcher messageBatcher) {
         this.messageBatcher = messageBatcher;
+    }
+
+    public void setFollowerManager(FollowerManager followerManager) {
+        this.followerManager = followerManager;
     }
 }

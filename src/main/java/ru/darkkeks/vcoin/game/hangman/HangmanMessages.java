@@ -18,7 +18,7 @@ public class HangmanMessages {
     public static final String NOT_ENOUGH_TO_PLAY = "😢 Чтобы начать игру, Вам необходимо %.3f монет";
     public static final String COMMANDS_MESSAGE = "❗ Включите отображение клавиатуры (в правом углу поля для ввода " +
             "сообщения)";
-    public static final String WORD_MESSAGE = "❗ Загаданное слово: ";
+    public static final String WORD_MESSAGE = "❗ Загаданное слово: %s";
     public static final String WIN_MESSAGE = "🏆 Вы выиграли. Ну ничего, в следующий раз победа будет на моей стороне!";
     public static final String LOSE_MESSAGE = "😢 Вы проиграли...";
     public static final String WITHDRAW_MESSAGE = "⏪ Отправьте количество монет, которые Вы хотите вывести...";

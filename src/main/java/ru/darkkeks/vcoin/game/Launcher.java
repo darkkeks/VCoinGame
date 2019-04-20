@@ -18,6 +18,7 @@ import ru.darkkeks.vcoin.game.api.VCoinApi;
 import ru.darkkeks.vcoin.game.callback.HttpServer;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
 import ru.darkkeks.vcoin.game.hangman.HangmanSession;
+import ru.darkkeks.vcoin.game.vk.FollowerManager;
 import ru.darkkeks.vcoin.game.vk.MessageBatcher;
 
 import java.util.Optional;
@@ -56,6 +57,9 @@ public class Launcher {
         context.setVCoinApi(new VCoinApi(VCOIN_ID, VCOIN_KEY, VCOIN_PAYLOAD, context));
         context.setDataSource(createDataSource());
         context.setMessageBatcher(new MessageBatcher(context));
+        context.setFollowerManager(new FollowerManager(context));
+
+        context.getFollowerManager().start();
 
         hangman = new Hangman(context);
 
