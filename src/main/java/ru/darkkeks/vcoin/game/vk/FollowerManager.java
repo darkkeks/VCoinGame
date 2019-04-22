@@ -33,7 +33,7 @@ public class FollowerManager {
                     GetMembersResponse result = context.getVk().groups().getMembers(context.getActor())
                             .count(COUNT)
                             .offset(offset)
-                            .groupId(context.getActor().getId().toString())
+                            .groupId(String.valueOf(-context.getActor().getId()))
                             .execute();
                     followers.addAll(result.getItems());
 

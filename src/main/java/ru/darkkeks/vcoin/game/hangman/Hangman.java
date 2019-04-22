@@ -126,8 +126,8 @@ public class Hangman extends Game<HangmanSession> {
         }));
 
         gameKeyboard = Keyboard.builder()
-                .newRow()
-                .addButton(new KeyboardButton(HangmanMessages.GIVE_UP, ButtonType.NEGATIVE))
+//                .newRow()
+//                .addButton(new KeyboardButton(HangmanMessages.GIVE_UP, ButtonType.NEGATIVE))
                 .newRow()
                 .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.DEFAULT))
                 .addButton(new KeyboardButton(HangmanMessages.BALANCE, ButtonType.DEFAULT))
@@ -222,10 +222,8 @@ public class Hangman extends Game<HangmanSession> {
         message += String.format(HangmanMessages.WORD_MESSAGE, state.getWord());
 
         if(!context.getFollowerManager().isFollower(session.getChatId())) {
-            if(random.nextDouble() < 0.1) {
-                message += "\n\n";
-                message += HangmanMessages.FOLLOW_MESSAGE;
-            }
+            message += "\n\n";
+            message += HangmanMessages.FOLLOW_MESSAGE;
         }
 
         if(win) {
@@ -257,18 +255,30 @@ public class Hangman extends Game<HangmanSession> {
     }
 
     private void handleDeposit(HangmanSession session) {
-        session.sendMessage(String.format(HangmanMessages.DEPOSIT_MESSAGE,
-                context.getVCoinApi().getPaymentLink(BASE_BET)), session.getScreen().getKeyboard());
+        String message = String.format(HangmanMessages.DEPOSIT_MESSAGE,
+                context.getVCoinApi().getPaymentLink(BASE_BET));
+        if(!context.getFollowerManager().isFollower(session.getChatId())) {
+            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
+        }
+        session.sendMessage(message, session.getScreen().getKeyboard());
     }
 
     private void handleWithdraw(HangmanSession session) {
-        session.sendMessage(HangmanMessages.WITHDRAW_MESSAGE, session.getScreen().getKeyboard());
+        String message = HangmanMessages.WITHDRAW_MESSAGE;
+        if(!context.getFollowerManager().isFollower(session.getChatId())) {
+            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
+        }
+        session.sendMessage(message, session.getScreen().getKeyboard());
         session.setScreen(withdrawScreen);
     }
 
     private void handleBalance(HangmanSession session) {
-        session.sendMessage(String.format(HangmanMessages.BALANCE_MESSAGE,
-                session.getState().getCoins() / 1000.0), session.getScreen().getKeyboard());
+        String message = String.format(HangmanMessages.BALANCE_MESSAGE,
+                session.getState().getCoins() / 1000.0);
+        if(!context.getFollowerManager().isFollower(session.getChatId())) {
+            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
+        }
+        session.sendMessage(message, session.getScreen().getKeyboard());
     }
 
     @Override
