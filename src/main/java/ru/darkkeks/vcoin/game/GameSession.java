@@ -16,17 +16,21 @@ public abstract class GameSession {
         this.chatId = chatId;
     }
 
+    public void sendMessage(String text) {
+        sendMessage(text, null, null);
+    }
+
     public void sendMessage(String text, Keyboard keyboard) {
         sendMessage(text, null, keyboard);
     }
 
     public void sendMessage(String text, String attachment, Keyboard keyboard) {
-        MessagesSendQuery query = getContext().getVk().messages().send(getContext().getActor());
+        MessagesSendQuery query = context.getVk().messages().send(context.getActor());
         query.message(text);
         query.peerId(getChatId());
         query.randomId(VkUtil.randomId());
         if(keyboard != null) {
-            query.unsafeParam("keyboard", getContext().getVk().getGson().toJson(keyboard));
+            query.unsafeParam("keyboard", context.getVk().getGson().toJson(keyboard));
         }
         if(attachment != null) {
             query.attachment(attachment);
@@ -38,10 +42,6 @@ public abstract class GameSession {
     public abstract void acceptMessage(Message message);
 
     public abstract void acceptPayment(Transaction transaction);
-
-    public AppContext getContext() {
-        return context;
-    }
 
     public int getChatId() {
         return chatId;

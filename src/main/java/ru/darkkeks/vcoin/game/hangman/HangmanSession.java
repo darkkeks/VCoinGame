@@ -15,6 +15,7 @@ public class HangmanSession extends GameSession {
     private Hangman hangman;
     private HangmanState state;
     private Screen<HangmanSession> screen;
+    private Screen<HangmanSession> previousScreen;
 
     public HangmanSession(AppContext context, Hangman hangman, int chatId) {
         super(context, chatId);
@@ -24,7 +25,14 @@ public class HangmanSession extends GameSession {
     }
 
     public void setScreen(Screen<HangmanSession> screen) {
-        this.screen = screen;
+        if(this.screen != screen) {
+            this.previousScreen = this.screen;
+            this.screen = screen;
+        }
+    }
+
+    public Screen<HangmanSession> getPreviousScreen() {
+        return previousScreen;
     }
 
     public Screen<HangmanSession> getScreen() {
@@ -45,6 +53,6 @@ public class HangmanSession extends GameSession {
         logger.info("Deposit(id = {}, amount = {})", getChatId(), transaction.getAmount());
         state.addCoins(transaction.getAmount());
         hangman.getDao().saveState(getChatId(), state);
-        sendMessage(String.format(HangmanMessages.DEPOSIT_SUCCESS, transaction.getAmount() / 1e3), screen.getKeyboard());
+        sendMessage(String.format(HangmanMessages.DEPOSIT_SUCCESS, transaction.getAmount() / 1e3));
     }
 }

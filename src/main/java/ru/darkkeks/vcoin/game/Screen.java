@@ -5,10 +5,11 @@ import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 public class Screen<T extends GameSession> {
 
-    private Keyboard keyboard;
+    private Function<T, Keyboard> keyboard;
     private MessageHandler<T> fallback;
     private List<MessageHandler<T>> handlers;
 
@@ -16,13 +17,13 @@ public class Screen<T extends GameSession> {
         this(null);
     }
 
-    public Screen(Keyboard keyboard) {
+    public Screen(Function<T, Keyboard> keyboard) {
         this.handlers = new ArrayList<>();
         this.keyboard = keyboard;
     }
 
-    public Keyboard getKeyboard() {
-        return keyboard;
+    public Keyboard getKeyboard(T session) {
+        return keyboard.apply(session);
     }
 
     public void addHandler(MessageHandler<T> handler) {

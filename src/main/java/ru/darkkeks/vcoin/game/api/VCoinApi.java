@@ -97,6 +97,10 @@ public class VCoinApi {
         return userId;
     }
 
+    public ExecutorService getTransferExecutor() {
+        return transferExecutor;
+    }
+
     public enum RequestType {
         MERCHANT(1),
         USER(2);

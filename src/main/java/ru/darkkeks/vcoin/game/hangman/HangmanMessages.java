@@ -9,8 +9,17 @@ public class HangmanMessages {
     public static final String DEPOSIT = "💰 Пополнить баланс";
     public static final String BALANCE = "💰 Баланс";
     public static final String WITHDRAW = "⏪ Вывести";
+    public static final String SETTINGS = "⚙️ Настройки";
+    public static final String GO_BACK = "🔙 Назад";
+    public static final String TOGGLE_IMAGE = "🎴 Изображение";
+    public static final String TOGGLE_GIVE_UP = "Кнопка \"Сдаться\"";
+    public static final String ENABLED_GIVE_UP_BUTTON = "❗ Отображение кнопки \"Сдаться\" было включено";
+    public static final String DISABLED_GIVE_UP_BUTTON = "❗ Отображение кнопки \"Сдаться\" было выключено";
+    public static final String ENABLED_IMAGE = "❗ Отображение статуса игры изображением было включено";
+    public static final String DISABLED_IMAGE = "❗ Отображение статуса игры изображением было выключено";
+    public static final String GO_BACK_MESSAGE = "✅ Вы успешно вышли из меню настроек";
     public static final String FOLLOW_MESSAGE = "✅ Кстати, Вы можете @vcoingame1 (подписаться на нас), чтобы следить " +
-                                                "за новостями и участвовать в конкурсах!";
+            "за новостями и участвовать в конкурсах!";
     public static final String SUCCESS_WITHDRAW_MESSAGE = "✅ %.3f монет было успешно выведено!";
     public static final String NOT_ENOUGH_WITHDRAW_MESSAGE = "😢 На Вашем балансе недостаточно средств :(";
     public static final String GIVE_UP = "🏳️ Сдаться";
@@ -27,7 +36,7 @@ public class HangmanMessages {
     public static final String DEPOSIT_SUCCESS = "✅ Ваш баланс пополнен на %.3f монет!";
     public static final String DEPOSIT_MESSAGE = "🔗 Для оплаты перейдите по следующей ссылке:\n%s";
     public static final String BALANCE_MESSAGE = "💰 Ваш баланс: %.3f монет";
-    public static final String GAME_STATUS_MESSAGE = "📗 Отгаданные буквы: %s\n👿 Неверные попытки: %s";
+    public static final String GAME_STATUS_MESSAGE = "📗 Отгаданные буквы: %s\n👿 Неверные попытки: %s\nПопытки: %s";
     public static final String RULES_MESSAGE = "📜 Правила игры виселица\n\n" +
             "Я загадываю очень сложное слово, а Вы должны отгадать его! Но каким образом?...\n\n" +
             "Присылайте мне буквы, о которых хотите получить информацию. Если буква есть в слове, то я " +
@@ -35,6 +44,16 @@ public class HangmanMessages {
             "одну часть Вашего тела. У вас есть всего 6 попыток, чтобы выиграть.\n\nМонеты забирает тот, кто выиграл!" +
             " Стоимость одной игры: %.3f \n\n🔴 Более подробно можно ознакомиться с правилами на википедии: " +
             "vk.cc/9hRoBS";
+
+    public static final String[] HEALTH = new String[]{
+            "❤❤❤❤❤❤",
+            "❤❤❤❤❤🖤",
+            "❤❤❤❤🖤🖤",
+            "❤❤❤🖤🖤🖤",
+            "❤❤🖤🖤🖤🖤",
+            "❤🖤🖤🖤🖤🖤",
+            "🖤🖤🖤🖤🖤🖤",
+    };
 
     public static final String[] IMAGES = new String[]{
             "photo-181113882_456259076",
@@ -45,5 +64,4 @@ public class HangmanMessages {
             "photo-181113882_456259081",
             "photo-181113882_456259082",
     };
-
 }

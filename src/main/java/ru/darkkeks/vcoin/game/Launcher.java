@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.api.TransactionDao;
 import ru.darkkeks.vcoin.game.api.TransactionWatcher;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
-import ru.darkkeks.vcoin.game.callback.HttpServer;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
 import ru.darkkeks.vcoin.game.hangman.HangmanSession;
 import ru.darkkeks.vcoin.game.vk.FollowerManager;
@@ -38,7 +37,6 @@ public class Launcher {
 
     private static final int GROUP_ID = Integer.valueOf(getEnv("GROUP_ID"));
     private static final String GROUP_TOKEN = getEnv("GROUP_TOKEN");
-    private static final String CALLBACK_SECRET = getEnv("CALLBACK_SECRET");
 
     private static final String DATABASE_URL = getEnv("DATABASE_URL");
     private static final String DATABASE_USERNAME = getEnv("DATABASE_USERNAME");
@@ -67,13 +65,19 @@ public class Launcher {
                 context.getVCoinApi(), new TransactionDao(context.getDataSource()), hangman.getTransferConsumer());
         context.getExecutorService().scheduleAtFixedRate(watcher, 0, 2, TimeUnit.SECONDS);
 
-        startLongPoll();
-    }
 
-    private void startCallback() {
-        HttpServer server = new HttpServer(8080);
-        GameBotCallback<HangmanSession> game = new GameBotCallback<>(context, hangman, CALLBACK_SECRET);
-        server.run(game);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out.println("Shutting down");
+            try {
+                context.getDataSource().close();
+                context.getExecutorService().shutdown();
+                context.getVCoinApi().getTransferExecutor().shutdown();
+                context.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
+                context.getVCoinApi().getTransferExecutor().awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {}
+        }));
+
+        startLongPoll();
     }
 
     private void startLongPoll() {
