@@ -21,8 +21,6 @@ public class GameScreen extends Screen<HangmanSession> {
 
     private static final Logger logger = LoggerFactory.getLogger(GameScreen.class);
 
-    public static final int BASE_BET = 1_000_000;
-    private static final int REWARD = 2_000_000;
     private static final int WRONG_ATTEMPTS = 5;
 
     private static final String ALPHABET = "ёйцукенгшщзхъфывапролджэячсмитьбю";
@@ -81,14 +79,19 @@ public class GameScreen extends Screen<HangmanSession> {
             if (masked.equals(word)) {
                 endGame(session, true, wrongAttempts.size());
             } else {
+                String message = String.format(HangmanMessages.GAME_STATUS_MESSAGE, masked, wrong);
+
+                if(session.getState().isDefinition()) {
+                    String definition = hangman.getDescGenerator().getDefinition(word);
+                    message = String.format(HangmanMessages.WORD_DEFINITION, definition) + message;
+                }
+
                 if(session.getState().isShowImage()) {
-                    session.sendMessage(String.format(HangmanMessages.GAME_STATUS_MESSAGE, masked, wrong,
-                            HangmanMessages.HEALTH[wrongAttempts.size()]),
-                            HangmanMessages.IMAGES[wrongAttempts.size()], getKeyboard(session));
+                    session.sendMessage(message, HangmanMessages.IMAGES[wrongAttempts.size()], getKeyboard(session));
                 } else {
-                    session.sendMessage(String.format(HangmanMessages.GAME_STATUS_MESSAGE, masked, wrong,
-                            HangmanMessages.HEALTH[wrongAttempts.size()]),
-                            getKeyboard(session));
+                    message += String.format(HangmanMessages.HEALTH_MESSAGE,
+                            HangmanMessages.HEALTH[wrongAttempts.size()]);
+                    session.sendMessage(message, getKeyboard(session));
                 }
                 session.setScreen(this);
             }
@@ -133,7 +136,7 @@ public class GameScreen extends Screen<HangmanSession> {
         session.setScreen(screen);
 
         if(win) {
-            state.addCoins(REWARD);
+            state.addCoins(state.getBet() * 2);
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));
         } else if(wrong != -1) {
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));
@@ -141,6 +144,7 @@ public class GameScreen extends Screen<HangmanSession> {
             session.sendMessage(message, screen.getKeyboard(session));
         }
 
+        state.setBet(0);
         state.setWord(null);
         state.setGuessedLetters(null);
 

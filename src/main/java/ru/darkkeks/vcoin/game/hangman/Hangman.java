@@ -13,6 +13,9 @@ import java.util.function.Consumer;
 
 public class Hangman extends Game<HangmanSession> {
 
+    private static final long DEFINITION_BET = 300_000;
+    public static final long BASE_BET = 1_000_000;
+
     private AppContext context;
     private HangmanDao hangmanDao;
 
@@ -22,11 +25,13 @@ public class Hangman extends Game<HangmanSession> {
     private SettingsScreen settingsScreen;
 
     private WordGenerator generator;
+    private WordDescGenerator descGenerator;
 
     public Hangman(AppContext context) {
         this.context = context;
         this.hangmanDao = new HangmanDao(context.getDataSource());
         this.generator = new WordGenerator();
+        this.descGenerator = new WordDescGenerator();
 
         mainScreen = new MainScreen(this);
         gameScreen = new GameScreen(this);
@@ -34,18 +39,34 @@ public class Hangman extends Game<HangmanSession> {
         settingsScreen = new SettingsScreen(this);
     }
 
+    private long getBet(HangmanState state) {
+        if(state.isFreeGame()) return 0;
+        if(state.isDefinition()) return DEFINITION_BET;
+        return BASE_BET;
+    }
+
     public void startGame(HangmanSession session) {
-        String word = generator.getWord();
+        long bet = getBet(session.getState());
 
-        session.getState().setWord(word);
-        session.getState().setGuessedLetters("");
+        if (session.getState().getCoins() >= bet) {
+            session.getState().addCoins(-bet);
 
-        gameScreen.sendGameMessage(session);
+            String word = session.getState().isDefinition() ? descGenerator.getWord() : generator.getWord();
+
+            session.getState().setBet(bet);
+            session.getState().setWord(word);
+            session.getState().setGuessedLetters("");
+
+            gameScreen.sendGameMessage(session);
+        } else {
+            session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, bet / 1e3),
+                    session.getScreen().getKeyboard(session));
+        }
     }
 
     public void handleDeposit(HangmanSession session) {
         String message = String.format(HangmanMessages.DEPOSIT_MESSAGE,
-                context.getVCoinApi().getPaymentLink(GameScreen.BASE_BET));
+                context.getVCoinApi().getPaymentLink(BASE_BET));
         if(!context.getFollowerManager().isFollower(session.getChatId())) {
             message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
         }
@@ -102,5 +123,9 @@ public class Hangman extends Game<HangmanSession> {
 
     public AppContext getContext() {
         return context;
+    }
+
+    public WordDescGenerator getDescGenerator() {
+        return descGenerator;
     }
 }

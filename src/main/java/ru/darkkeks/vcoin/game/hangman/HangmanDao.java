@@ -17,12 +17,17 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
     private static final String SELECT = "SELECT * FROM hangman WHERE user_id = ?";
 
     private static final String UPDATE =
-            "INSERT INTO hangman(user_id, coins, word, letters, showGiveUp, showImage) VALUES (?, ?, ?, ?, ?, ?) " +
-            "ON CONFLICT (user_id) " +
-            "DO UPDATE SET " +
+            "INSERT INTO hangman(user_id, coins, bet, word, letters, showGiveUp, showImage, freeGame, definition) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "ON CONFLICT (user_id) DO UPDATE SET " +
             "coins = excluded.coins, " +
+            "bet = excluded.bet, " +
             "word = excluded.word, " +
-            "letters = excluded.letters";
+            "letters = excluded.letters, " +
+            "showGiveUp = excluded.showGiveUp, " +
+            "showImage = excluded.showImage, " +
+            "freeGame = excluded.freeGame, " +
+            "definition = excluded.definition";
 
     private HikariDataSource dataSource;
 
@@ -40,10 +45,13 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
             if(resultSet.next()) {
                 return new HangmanState(
                         resultSet.getLong("coins"),
+                        resultSet.getLong("bet"),
                         resultSet.getString("word"),
                         resultSet.getString("letters"),
                         resultSet.getBoolean("showGiveUp"),
-                        resultSet.getBoolean("showImage"));
+                        resultSet.getBoolean("showImage"),
+                        resultSet.getBoolean("freeGame"),
+                        resultSet.getBoolean("definition"));
             }
 
             return new HangmanState();
@@ -55,17 +63,20 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
 
     @Override
     public void saveState(Integer key, HangmanState state) {
-        logger.info("Saved state (id={}, coins={}, word={}, letters={})", key, state.getCoins(),
-                state.getWord(), state.getGuessedLetters());
+        logger.info("Saved state (id={}, coins={}, bet={}, word={}, letters={})", key, state.getCoins(),
+                state.getBet(), state.getWord(), state.getGuessedLetters());
 
         try(Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(UPDATE)) {
             statement.setInt(1, key);
             statement.setLong(2, state.getCoins());
-            statement.setString(3, state.getWord());
-            statement.setString(4, state.getGuessedLetters());
-            statement.setBoolean(5, state.isShowGiveUp());
-            statement.setBoolean(6, state.isShowImage());
+            statement.setLong(3, state.getBet());
+            statement.setString(4, state.getWord());
+            statement.setString(5, state.getGuessedLetters());
+            statement.setBoolean(6, state.isShowGiveUp());
+            statement.setBoolean(7, state.isShowImage());
+            statement.setBoolean(8, state.isFreeGame());
+            statement.setBoolean(9, state.isDefinition());
             statement.executeUpdate();
         } catch (SQLException e) {
             logger.error("Cant save hangman state", e);

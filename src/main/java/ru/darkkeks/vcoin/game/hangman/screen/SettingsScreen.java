@@ -37,6 +37,28 @@ public class SettingsScreen extends Screen<HangmanSession> {
             hangman.getDao().saveState(session.getChatId(), session.getState());
         }));
 
+        addHandler(Handlers.exactMatch(HangmanMessages.FREE_GAME, session -> {
+            session.getState().toggleFreeGame();
+            if(session.getState().isFreeGame()) {
+                session.sendMessage(HangmanMessages.ENABLED_FREE_GAME, getKeyboard(session));
+            } else {
+                session.sendMessage(HangmanMessages.DISABLED_FREE_GAME, getKeyboard(session));
+            }
+
+            hangman.getDao().saveState(session.getChatId(), session.getState());
+        }));
+
+        addHandler(Handlers.exactMatch(HangmanMessages.DEFINITION, session -> {
+            session.getState().toggleDefinition();
+            if(session.getState().isDefinition()) {
+                session.sendMessage(HangmanMessages.ENABLED_DEFINITION, getKeyboard(session));
+            } else {
+                session.sendMessage(HangmanMessages.DISABLED_DEFINITION, getKeyboard(session));
+            }
+
+            hangman.getDao().saveState(session.getChatId(), session.getState());
+        }));
+
         addHandler(Handlers.exactMatch(HangmanMessages.GO_BACK, session -> {
             session.setScreen(session.getPreviousScreen());
             session.sendMessage(HangmanMessages.GO_BACK_MESSAGE, session.getScreen().getKeyboard(session));
@@ -61,6 +83,20 @@ public class SettingsScreen extends Screen<HangmanSession> {
             builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_IMAGE, ButtonType.POSITIVE));
         } else {
             builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_IMAGE, ButtonType.NEGATIVE));
+        }
+
+        builder.newRow();
+
+        if (state.isFreeGame()) {
+            builder.addButton(new KeyboardButton(HangmanMessages.FREE_GAME, ButtonType.POSITIVE));
+        } else {
+            builder.addButton(new KeyboardButton(HangmanMessages.FREE_GAME, ButtonType.NEGATIVE));
+        }
+
+        if (state.isDefinition()) {
+            builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.POSITIVE));
+        } else {
+            builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.NEGATIVE));
         }
 
         builder.newRow();

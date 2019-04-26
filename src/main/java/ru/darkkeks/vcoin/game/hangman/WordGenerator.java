@@ -27,10 +27,6 @@ public class WordGenerator {
         }
     }
 
-    public static void main(String[] args) {
-        new WordGenerator();
-    }
-
     public String getWord() {
         return words.get(random.nextInt(words.size()));
     }

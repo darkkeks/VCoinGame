@@ -24,17 +24,10 @@ public class MainScreen extends Screen<HangmanSession> {
                 .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.DEFAULT))
                 .build()));
 
-        addHandler(Handlers.exactMatch(HangmanMessages.PLAY, session -> {
-            if (session.getState().getCoins() >= GameScreen.BASE_BET) {
-                session.getState().addCoins(-GameScreen.BASE_BET);
-                hangman.startGame(session);
-            } else {
-                session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, GameScreen.BASE_BET / 1e3), getKeyboard(session));
-            }
-        }));
+        addHandler(Handlers.exactMatch(HangmanMessages.PLAY, hangman::startGame));
 
         addHandler(Handlers.exactMatch(HangmanMessages.RULES, session -> {
-            session.sendMessage(String.format(HangmanMessages.RULES_MESSAGE, GameScreen.BASE_BET / 1e3), getKeyboard(session));
+            session.sendMessage(HangmanMessages.RULES_MESSAGE, getKeyboard(session));
         }));
 
         addHandler(Handlers.exactMatch(HangmanMessages.SETTINGS, session -> {
@@ -44,7 +37,7 @@ public class MainScreen extends Screen<HangmanSession> {
         }));
 
         addHandler(Handlers.exactMatch(HangmanMessages.START, session -> {
-            session.sendMessage(String.format(HangmanMessages.RULES_MESSAGE, GameScreen.BASE_BET / 1e3), getKeyboard(session));
+            session.sendMessage(HangmanMessages.RULES_MESSAGE, getKeyboard(session));
         }));
 
         addHandler(Handlers.exactMatch(HangmanMessages.DEPOSIT, hangman::handleDeposit));
