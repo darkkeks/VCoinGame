@@ -17,8 +17,8 @@ public class HangmanMessages {
     public static final String ENABLED_FREE_GAME = "Игры теперь бесплатные";
     public static final String DISABLED_FREE_GAME = "Игры теперь платные";
     public static final String DEFINITION = "Определение слова";
-    public static final String ENABLED_DEFINITION = "Соси жопу (вкл)";
-    public static final String DISABLED_DEFINITION = "Соси жопу (выкл)";
+    public static final String ENABLED_DEFINITION = "✅ Показывать определение слова: включено";
+    public static final String DISABLED_DEFINITION = "🔴 Показывать определение слова: выключено";
     public static final String ENABLED_GIVE_UP_BUTTON = "❗ Отображение кнопки \"Сдаться\" было включено";
     public static final String DISABLED_GIVE_UP_BUTTON = "❗ Отображение кнопки \"Сдаться\" было выключено";
     public static final String ENABLED_IMAGE = "❗ Отображение статуса игры изображением было включено";
