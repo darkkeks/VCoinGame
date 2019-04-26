@@ -5,6 +5,7 @@ public class HangmanMessages {
 
     public static final String START = "Начать";
     public static final String PLAY = "🎴 Играть";
+    public static final String BUY = "💰 Купить коины";
     public static final String RULES = "📜 Правила";
     public static final String DEPOSIT = "💰 Пополнить баланс";
     public static final String BALANCE = "💰 Баланс";
@@ -23,6 +24,7 @@ public class HangmanMessages {
     public static final String DISABLED_GIVE_UP_BUTTON = "❗ Отображение кнопки \"Сдаться\" было выключено";
     public static final String ENABLED_IMAGE = "❗ Отображение статуса игры изображением было включено";
     public static final String DISABLED_IMAGE = "❗ Отображение статуса игры изображением было выключено";
+    public static final String BUY_MESSAGE = "💰 Купить коины: %s\n\n📝 Инструкция: vk.cc/9giWdY";
     public static final String GO_BACK_MESSAGE = "✅ Вы успешно вышли из меню настроек";
     public static final String FOLLOW_MESSAGE = "✅ Кстати, Вы можете @vcoingame1 (подписаться на нас), чтобы следить " +
             "за новостями и участвовать в конкурсах!";
@@ -71,5 +73,4 @@ public class HangmanMessages {
             "photo-181113882_456259081",
             "photo-181113882_456259082",
     };
-
 }
