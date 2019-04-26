@@ -69,11 +69,11 @@ public class Launcher {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down");
             try {
-                context.getDataSource().close();
                 context.getExecutorService().shutdown();
                 context.getVCoinApi().getTransferExecutor().shutdown();
                 context.getExecutorService().awaitTermination(10, TimeUnit.SECONDS);
                 context.getVCoinApi().getTransferExecutor().awaitTermination(10, TimeUnit.SECONDS);
+                context.getDataSource().close();
             } catch (InterruptedException ignored) {}
         }));
 

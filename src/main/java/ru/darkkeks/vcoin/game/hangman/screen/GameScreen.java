@@ -127,11 +127,6 @@ public class GameScreen extends Screen<HangmanSession> {
         message += "\n\n";
         message += String.format(HangmanMessages.WORD_MESSAGE, state.getWord());
 
-        if(!hangman.getContext().getFollowerManager().isFollower(session.getChatId())) {
-            message += "\n\n";
-            message += HangmanMessages.FOLLOW_MESSAGE;
-        }
-
         MainScreen screen = hangman.getMainScreen();
         session.setScreen(screen);
 

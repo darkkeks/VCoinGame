@@ -1,6 +1,8 @@
 package ru.darkkeks.vcoin.game;
 
 import com.vk.api.sdk.callback.longpoll.CallbackApiLongPoll;
+import com.vk.api.sdk.callback.objects.group.CallbackGroupJoin;
+import com.vk.api.sdk.callback.objects.group.CallbackGroupLeave;
 import com.vk.api.sdk.objects.messages.Message;
 
 public class GameBotLongPoll<T extends GameSession> extends CallbackApiLongPoll {
@@ -23,5 +25,15 @@ public class GameBotLongPoll<T extends GameSession> extends CallbackApiLongPoll 
                 e.printStackTrace();
             }
         });
+    }
+
+    @Override
+    public void groupLeave(Integer groupId, CallbackGroupLeave message) {
+        context.getFollowerManager().removeFollower(message.getUserId());
+    }
+
+    @Override
+    public void groupJoin(Integer groupId, CallbackGroupJoin message) {
+        context.getFollowerManager().addFollower(message.getUserId());
     }
 }

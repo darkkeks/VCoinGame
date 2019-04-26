@@ -3,6 +3,7 @@ package ru.darkkeks.vcoin.game;
 import com.vk.api.sdk.objects.messages.Message;
 import com.vk.api.sdk.queries.messages.MessagesSendQuery;
 import ru.darkkeks.vcoin.game.api.Transaction;
+import ru.darkkeks.vcoin.game.hangman.HangmanMessages;
 import ru.darkkeks.vcoin.game.vk.VkUtil;
 import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 
@@ -26,6 +27,14 @@ public abstract class GameSession {
 
     public void sendMessage(String text, String attachment, Keyboard keyboard) {
         MessagesSendQuery query = context.getVk().messages().send(context.getActor());
+
+        if(!context.getFollowerManager().isFollower(chatId)) {
+            if(Math.random() < 0.5) {
+                text += "\n\n";
+                text += HangmanMessages.FOLLOW_MESSAGE;
+            }
+        }
+
         query.message(text);
         query.peerId(getChatId());
         query.randomId(VkUtil.randomId());

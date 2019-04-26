@@ -67,17 +67,11 @@ public class Hangman extends Game<HangmanSession> {
     public void handleDeposit(HangmanSession session) {
         String message = String.format(HangmanMessages.DEPOSIT_MESSAGE,
                 context.getVCoinApi().getPaymentLink(BASE_BET));
-        if(!context.getFollowerManager().isFollower(session.getChatId())) {
-            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
-        }
         session.sendMessage(message, session.getScreen().getKeyboard(session));
     }
 
     public void handleWithdraw(HangmanSession session) {
         String message = HangmanMessages.WITHDRAW_MESSAGE;
-        if(!context.getFollowerManager().isFollower(session.getChatId())) {
-            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
-        }
         session.sendMessage(message, session.getScreen().getKeyboard(session));
         session.setScreen(withdrawScreen);
     }
@@ -85,9 +79,6 @@ public class Hangman extends Game<HangmanSession> {
     public void handleBalance(HangmanSession session) {
         String message = String.format(HangmanMessages.BALANCE_MESSAGE,
                 session.getState().getCoins() / 1000.0);
-        if(!context.getFollowerManager().isFollower(session.getChatId())) {
-            message += "\n\n" + HangmanMessages.FOLLOW_MESSAGE;
-        }
         session.sendMessage(message, session.getScreen().getKeyboard(session));
     }
 

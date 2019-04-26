@@ -15,7 +15,6 @@ public class FollowerManager {
 
     private static final Logger logger = LoggerFactory.getLogger(FollowerManager.class);
 
-    private static final int FETCH_PERIOD_SECONDS = 30;
     private static final int COUNT = 1000;
 
     private AppContext context;
@@ -27,7 +26,7 @@ public class FollowerManager {
     }
 
     public void start() {
-        context.getExecutorService().scheduleAtFixedRate(() -> {
+        context.getExecutorService().execute(() -> {
             for(int offset = 0; ; offset += COUNT) {
                 try {
                     GetMembersResponse result = context.getVk().groups().getMembers(context.getActor())
@@ -44,11 +43,18 @@ public class FollowerManager {
                     logger.error("Error fetching followers", e);
                 }
             }
-        }, 0, FETCH_PERIOD_SECONDS, TimeUnit.SECONDS);
+        });
     }
 
     public boolean isFollower(int usedId) {
         return followers.contains(usedId);
     }
 
+    public void addFollower(int userId) {
+        followers.add(userId);
+    }
+
+    public void removeFollower(int userId) {
+        followers.remove(userId);
+    }
 }
