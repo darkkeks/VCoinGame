@@ -132,6 +132,7 @@ public class GameScreen extends Screen<HangmanSession> {
 
         if(win) {
             state.addCoins(state.getBet() * 2);
+            state.addProfit(state.getBet());
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));
         } else if(wrong != -1) {
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));

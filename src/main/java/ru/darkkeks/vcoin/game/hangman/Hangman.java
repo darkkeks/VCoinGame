@@ -9,12 +9,17 @@ import ru.darkkeks.vcoin.game.hangman.screen.MainScreen;
 import ru.darkkeks.vcoin.game.hangman.screen.SettingsScreen;
 import ru.darkkeks.vcoin.game.hangman.screen.WithdrawScreen;
 
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class Hangman extends Game<HangmanSession> {
 
     private static final long DEFINITION_BET = 300_000;
     public static final long BASE_BET = 1_000_000;
+    private static final long MAX_PROFIT = 50_000_000;
 
     private AppContext context;
     private HangmanDao hangmanDao;
@@ -37,6 +42,21 @@ public class Hangman extends Game<HangmanSession> {
         gameScreen = new GameScreen(this);
         withdrawScreen = new WithdrawScreen(this);
         settingsScreen = new SettingsScreen(this);
+
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
+        ZonedDateTime nextRun = now.withHour(0).withMinute(0).withSecond(0);
+        if(now.compareTo(nextRun) > 0) {
+            nextRun = nextRun.plusDays(1);
+        }
+
+        Duration duration = Duration.between(now, nextRun);
+        long initialDelay = duration.getSeconds();
+
+        System.out.println("Next reset in " + initialDelay + " settings");
+
+        context.getExecutorService().scheduleAtFixedRate(() -> {
+            hangmanDao.resetProfit();
+        }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
     private long getBet(HangmanState state) {
@@ -48,7 +68,12 @@ public class Hangman extends Game<HangmanSession> {
     public void startGame(HangmanSession session) {
         long bet = getBet(session.getState());
 
-        if (session.getState().getCoins() >= bet) {
+        if (bet != 0 && session.getState().getProfit() >= MAX_PROFIT) {
+            session.sendMessage(HangmanMessages.TOO_MUCH_PROFIT, session.getScreen().getKeyboard(session));
+        } else if(session.getState().getCoins() < bet) {
+            session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, bet / 1e3),
+                    session.getScreen().getKeyboard(session));
+        } else {
             session.getState().addCoins(-bet);
 
             String word = session.getState().isDefinition() ? descGenerator.getWord() : generator.getWord();
@@ -58,9 +83,6 @@ public class Hangman extends Game<HangmanSession> {
             session.getState().setGuessedLetters("");
 
             gameScreen.sendGameMessage(session);
-        } else {
-            session.sendMessage(String.format(HangmanMessages.NOT_ENOUGH_TO_PLAY, bet / 1e3),
-                    session.getScreen().getKeyboard(session));
         }
     }
 

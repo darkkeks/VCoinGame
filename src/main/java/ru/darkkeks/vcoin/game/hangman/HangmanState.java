@@ -1,7 +1,5 @@
 package ru.darkkeks.vcoin.game.hangman;
 
-import ru.darkkeks.vcoin.game.hangman.screen.GameScreen;
-
 public class HangmanState {
 
     private long coins;
@@ -14,12 +12,15 @@ public class HangmanState {
     private boolean freeGame;
     private boolean definition;
 
+    private long profit;
+
     public HangmanState() {
-        this(Hangman.BASE_BET, 0, null, null, false, true, false, false);
+        this(Hangman.BASE_BET, 0, null, null, false, true, false, false, 0);
     }
 
     public HangmanState(long coins, long bet, String word, String guessedLetters,
-                        boolean showGiveUp, boolean showImage, boolean freeGame, boolean definition) {
+                        boolean showGiveUp, boolean showImage, boolean freeGame, boolean definition,
+                        long profit) {
         this.coins = coins;
         this.bet = bet;
         this.word = word;
@@ -27,6 +28,8 @@ public class HangmanState {
         this.showGiveUp = showGiveUp;
         this.showImage = showImage;
         this.freeGame = freeGame;
+        this.definition = definition;
+        this.profit = profit;
     }
 
     public boolean inGame() {
@@ -95,5 +98,13 @@ public class HangmanState {
 
     public void toggleDefinition() {
         definition = !definition;
+    }
+
+    public long getProfit() {
+        return profit;
+    }
+
+    public void addProfit(long profit) {
+        this.profit += profit;
     }
 }

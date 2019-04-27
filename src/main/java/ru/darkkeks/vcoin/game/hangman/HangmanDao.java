@@ -14,11 +14,14 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
 
     private static final Logger logger = LoggerFactory.getLogger(HangmanDao.class);
 
+    private static final String RESET_PROFIT = "UPDATE hangman SET profit = 0 WHERE profit != 0";
+
     private static final String SELECT = "SELECT * FROM hangman WHERE user_id = ?";
 
     private static final String UPDATE =
-            "INSERT INTO hangman(user_id, coins, bet, word, letters, showGiveUp, showImage, freeGame, definition) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "INSERT INTO hangman(user_id, coins, bet, word, letters, " +
+                    "showGiveUp, showImage, freeGame, definition, profit) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
             "ON CONFLICT (user_id) DO UPDATE SET " +
             "coins = excluded.coins, " +
             "bet = excluded.bet, " +
@@ -27,7 +30,8 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
             "showGiveUp = excluded.showGiveUp, " +
             "showImage = excluded.showImage, " +
             "freeGame = excluded.freeGame, " +
-            "definition = excluded.definition";
+            "definition = excluded.definition," +
+            "profit = excluded.profit";
 
     private HikariDataSource dataSource;
 
@@ -51,7 +55,8 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
                         resultSet.getBoolean("showGiveUp"),
                         resultSet.getBoolean("showImage"),
                         resultSet.getBoolean("freeGame"),
-                        resultSet.getBoolean("definition"));
+                        resultSet.getBoolean("definition"),
+                        resultSet.getLong("profit"));
             }
 
             return new HangmanState();
@@ -63,8 +68,8 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
 
     @Override
     public void saveState(Integer key, HangmanState state) {
-        logger.info("Saved state (id={}, coins={}, bet={}, word={}, letters={})", key, state.getCoins(),
-                state.getBet(), state.getWord(), state.getGuessedLetters());
+        logger.info("Saved state (id={}, coins={}, bet={}, word={}, letters={}, profit={})", key, state.getCoins(),
+                state.getBet(), state.getWord(), state.getGuessedLetters(), state.getProfit());
 
         try(Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(UPDATE)) {
@@ -77,9 +82,21 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
             statement.setBoolean(7, state.isShowImage());
             statement.setBoolean(8, state.isFreeGame());
             statement.setBoolean(9, state.isDefinition());
+            statement.setLong(10, state.getProfit());
             statement.executeUpdate();
         } catch (SQLException e) {
             logger.error("Cant save hangman state", e);
+        }
+    }
+
+    public void resetProfit() {
+        logger.info("Resetting profit");
+
+        try (Connection connection = dataSource.getConnection();
+                PreparedStatement statement = connection.prepareStatement(RESET_PROFIT)) {
+            statement.executeUpdate();
+        } catch (SQLException e) {
+            logger.error("Cant reset profit");
         }
     }
 }
