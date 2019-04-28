@@ -52,8 +52,6 @@ public class Hangman extends Game<HangmanSession> {
         Duration duration = Duration.between(now, nextRun);
         long initialDelay = duration.getSeconds();
 
-        System.out.println("Next reset in " + initialDelay + " settings");
-
         context.getExecutorService().scheduleAtFixedRate(() -> {
             hangmanDao.resetProfit();
         }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
@@ -75,6 +73,7 @@ public class Hangman extends Game<HangmanSession> {
                     session.getScreen().getKeyboard(session));
         } else {
             session.getState().addCoins(-bet);
+            session.getState().addProfit(-bet);
 
             String word = session.getState().isDefinition() ? descGenerator.getWord() : generator.getWord();
 
