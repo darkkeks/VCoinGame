@@ -1,10 +1,8 @@
 package ru.darkkeks.vcoin.game.hangman.screen;
 
-import com.vk.api.sdk.objects.messages.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.Handlers;
-import ru.darkkeks.vcoin.game.MessageHandler;
 import ru.darkkeks.vcoin.game.Screen;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
 import ru.darkkeks.vcoin.game.hangman.HangmanMessages;
@@ -21,9 +19,9 @@ public class GameScreen extends Screen<HangmanSession> {
 
     private static final Logger logger = LoggerFactory.getLogger(GameScreen.class);
 
-    private static final int WRONG_ATTEMPTS = 5;
+    private static final int WRONG_ATTEMPTS = 6;
 
-    private static final String ALPHABET = "ёйцукенгшщзхъфывапролджэячсмитьбю";
+    private static final String GUESS_PATTERN = "^[ёЁа-яА-Я]+$";
     private static Map<String, String> CHAR_REPLACE;
 
     static {
@@ -38,83 +36,82 @@ public class GameScreen extends Screen<HangmanSession> {
         this.hangman = hangman;
 
         addHandler(Handlers.exactMatch(HangmanMessages.GIVE_UP, session -> {
-            endGame(session, false, -1);
+            endGame(session, false, 0);
         }));
-
-        addHandler(new MessageHandler<>(message -> extractLetter(message) != null, this::handleLetter));
 
         addHandler(Handlers.exactMatch(HangmanMessages.DEPOSIT, hangman::handleDeposit));
         addHandler(Handlers.exactMatch(HangmanMessages.BALANCE, hangman::handleBalance));
         addHandler(Handlers.exactMatch(HangmanMessages.WITHDRAW, hangman::handleWithdraw));
 
+        addHandler(Handlers.regexp(GUESS_PATTERN, (match, session) -> {
+            HangmanState state = session.getState();
+            String guess = match.group().toLowerCase();
+
+            for (Map.Entry<String, String> entry : CHAR_REPLACE.entrySet()) {
+                String from = entry.getKey();
+                String to = entry.getValue();
+
+                guess = guess.replace(from, to);
+                if (state.getWord().contains(from)) {
+                    state.setWord(state.getWord().replace(from, to));
+                }
+                if (state.getGuessedLetters().contains(from)) {
+                    state.setGuessedLetters(state.getGuessedLetters().replace(from, to));
+                }
+            }
+
+            List<Character> newChars = guess.chars().mapToObj(x -> (char)x)
+                    .filter(x -> state.getGuessedLetters().indexOf(x) == -1).collect(Collectors.toList());
+
+            if(newChars.size() == 0) {
+                session.sendMessage(HangmanMessages.LETTER_USED_ALREADY, getKeyboard(session));
+            } else {
+                StringBuilder previousGuesses = new StringBuilder(state.getGuessedLetters());
+                newChars.forEach(previousGuesses::append);
+                state.setGuessedLetters(previousGuesses.toString());
+
+                sendGameMessage(session);
+            }
+        }));
+
         fallback(Handlers.any((message, session) -> sendGameMessage(session)));
     }
 
     public void sendGameMessage(HangmanSession session) {
-        String word = session.getState().getWord();
-        char[] result = word.toCharArray();
-        Arrays.fill(result, '*');
+        HangmanState state = session.getState();
 
-        Set<Integer> wrongAttempts = new HashSet<>();
-        session.getState().getGuessedLetters().chars().forEach(ch -> {
-            boolean used = false;
-            for (int i = 0; i < word.length(); ++i) {
-                if (word.charAt(i) == ch) {
-                    result[i] = word.charAt(i);
-                    used = true;
-                }
-            }
-            if (!used) {
-                wrongAttempts.add(ch);
-            }
-        });
+        Set<Character> wrongAttempts = state.getGuessedLetters().chars().mapToObj(x -> (char)x)
+                .filter(x -> state.getWord().indexOf(x) == -1).collect(Collectors.toSet());
 
-        if (wrongAttempts.size() > WRONG_ATTEMPTS) {
-            endGame(session, false, wrongAttempts.size());
+        String maskedWord = state.getWord().chars().mapToObj(x -> (char)x).map(x -> {
+            if(state.getGuessedLetters().indexOf(x) == -1) {
+                return "*";
+            }
+            return Character.toString(x);
+        }).collect(Collectors.joining());
+
+        int wrongAttemptsCount = Math.min(wrongAttempts.size(), WRONG_ATTEMPTS);
+        if (wrongAttemptsCount >= WRONG_ATTEMPTS) {
+            endGame(session, false, wrongAttemptsCount);
         } else {
-            hangman.getDao().saveState(session.getChatId(), session.getState());
+            String wrong = wrongAttempts.stream().map(x -> Character.toString(x))
+                    .collect(Collectors.joining(", "));
 
-            String masked = new String(result);
-            String wrong = wrongAttempts.stream().map(x -> "" + (char)(int)x).collect(Collectors.joining(", "));
-            if (masked.equals(word)) {
-                endGame(session, true, wrongAttempts.size());
+            if (maskedWord.equals(state.getWord())) {
+                endGame(session, true, wrongAttemptsCount);
             } else {
-                String message = String.format(HangmanMessages.GAME_STATUS_MESSAGE, masked, wrong);
+                hangman.getDao().saveState(session.getChatId(), session.getState());
+
+                String message = String.format(HangmanMessages.GAME_STATUS_MESSAGE, maskedWord, wrong);
 
                 if(session.getState().isDefinition()) {
-                    String definition = hangman.getDescGenerator().getDefinition(word);
+                    String definition = hangman.getDescGenerator().getDefinition(state.getWord());
                     message = String.format(HangmanMessages.WORD_DEFINITION, definition) + message;
                 }
 
-                if(session.getState().isShowImage()) {
-                    session.sendMessage(message, HangmanMessages.IMAGES[wrongAttempts.size()], getKeyboard(session));
-                } else {
-                    message += String.format(HangmanMessages.HEALTH_MESSAGE,
-                            HangmanMessages.HEALTH[wrongAttempts.size()]);
-                    session.sendMessage(message, getKeyboard(session));
-                }
                 session.setScreen(this);
+                sendMessageWithHealth(message, wrongAttemptsCount, session);
             }
-        }
-    }
-
-    private void handleLetter(Message message, HangmanSession session) {
-        String letter = extractLetter(message);
-        assert letter != null;
-        CHAR_REPLACE.forEach((from, to) -> {
-            HangmanState state = session.getState();
-            if (state.getWord().contains(from)) {
-                state.setWord(state.getWord().replace(from, to));
-            }
-            if (state.getGuessedLetters().contains(from)) {
-                state.setGuessedLetters(state.getGuessedLetters().replace(from, to));
-            }
-        });
-        if (session.getState().getGuessedLetters().contains(letter)) {
-            session.sendMessage(HangmanMessages.LETTER_USED_ALREADY, getKeyboard(session));
-        } else {
-            session.getState().setGuessedLetters(session.getState().getGuessedLetters() + letter);
-            sendGameMessage(session);
         }
     }
 
@@ -123,21 +120,18 @@ public class GameScreen extends Screen<HangmanSession> {
 
         logger.info("GameEnd(user = {}, win = {}, wrong = {})", session.getChatId(), win, wrong);
 
+        MainScreen screen = hangman.getMainScreen();
+        session.setScreen(screen);
+
         String message = (win ? HangmanMessages.WIN_MESSAGE : HangmanMessages.LOSE_MESSAGE);
         message += "\n\n";
         message += String.format(HangmanMessages.WORD_MESSAGE, state.getWord());
 
-        MainScreen screen = hangman.getMainScreen();
-        session.setScreen(screen);
+        sendMessageWithHealth(message, wrong, session);
 
         if(win) {
             state.addCoins(state.getBet() * 2);
             state.addProfit(state.getBet() * 2);
-            session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));
-        } else if(wrong != -1) {
-            session.sendMessage(message, HangmanMessages.IMAGES[wrong], screen.getKeyboard(session));
-        } else {
-            session.sendMessage(message, screen.getKeyboard(session));
         }
 
         state.setBet(0);
@@ -147,13 +141,14 @@ public class GameScreen extends Screen<HangmanSession> {
         hangman.getDao().saveState(session.getChatId(), state);
     }
 
-    private String extractLetter(Message message) {
-        if(message.getText() == null) return null;
-        String text = message.getText().trim().toLowerCase();
-        if(text.length() != 1) return null;
-        if(!ALPHABET.contains(text)) return null;
-        if(CHAR_REPLACE.containsKey(text)) return CHAR_REPLACE.get(text);
-        return text;
+    private void sendMessageWithHealth(String message, int wrong, HangmanSession session) {
+        if(session.getState().isShowImage()) {
+            session.sendMessage(message, HangmanMessages.IMAGES[wrong], session.getScreen().getKeyboard(session));
+        } else {
+            message += String.format(HangmanMessages.HEALTH_MESSAGE,
+                    HangmanMessages.HEALTH[wrong]);
+            session.sendMessage(message, session.getScreen().getKeyboard(session));
+        }
     }
 
     private static Keyboard createKeyboard(HangmanSession session) {

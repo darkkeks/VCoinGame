@@ -52,9 +52,8 @@ public class Hangman extends Game<HangmanSession> {
         Duration duration = Duration.between(now, nextRun);
         long initialDelay = duration.getSeconds();
 
-        context.getExecutorService().scheduleAtFixedRate(() -> {
-            hangmanDao.resetProfit();
-        }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+        context.getExecutorService().scheduleAtFixedRate(hangmanDao::resetProfit, initialDelay,
+                TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
     private long getBet(HangmanState state) {
