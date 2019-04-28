@@ -11,16 +11,17 @@ public class HangmanState {
     private boolean showImage;
     private boolean freeGame;
     private boolean definition;
+    private boolean english;
 
     private long profit;
 
     public HangmanState() {
-        this(Hangman.BASE_BET, 0, null, null, false, true, false, false, 0);
+        this(Hangman.BASE_BET, 0, null, null, false, true, false, false, 0, false);
     }
 
     public HangmanState(long coins, long bet, String word, String guessedLetters,
                         boolean showGiveUp, boolean showImage, boolean freeGame, boolean definition,
-                        long profit) {
+                        long profit, boolean english) {
         this.coins = coins;
         this.bet = bet;
         this.word = word;
@@ -30,6 +31,7 @@ public class HangmanState {
         this.freeGame = freeGame;
         this.definition = definition;
         this.profit = profit;
+        this.english = english;
     }
 
     public boolean inGame() {
@@ -106,5 +108,13 @@ public class HangmanState {
 
     public void addProfit(long profit) {
         this.profit += profit;
+    }
+
+    public boolean isEnglish() {
+        return english;
+    }
+
+    public void toggleEnglish() {
+        this.english = !english;
     }
 }

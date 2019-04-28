@@ -1,26 +1,28 @@
 package ru.darkkeks.vcoin.game.hangman;
 
-import ru.darkkeks.vcoin.game.Launcher;
-
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Random;
 
 public class WordGenerator {
 
-    private static final String WORD_LIST = "/words.txt";
-
     private ArrayList<String> words;
     private Random random;
 
-    public WordGenerator() {
+    public WordGenerator(WordDescGenerator generator) {
+        random = new Random();
+        words = generator.getWords();
+    }
+
+    public WordGenerator(InputStream wordSource) {
         words = new ArrayList<>();
         random = new Random();
 
         try (BufferedReader reader =
-                     new BufferedReader(new InputStreamReader(Launcher.class.getResourceAsStream(WORD_LIST)))) {
+                     new BufferedReader(new InputStreamReader(wordSource))) {
             reader.lines().forEach(words::add);
         } catch (IOException e) {
             e.printStackTrace();

@@ -1,5 +1,6 @@
 package ru.darkkeks.vcoin.game.vk;
 
+import com.google.gson.JsonElement;
 import com.vk.api.sdk.client.AbstractQueryBuilder;
 import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ClientException;

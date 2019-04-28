@@ -36,7 +36,7 @@ public class Screen<T extends GameSession> {
 
     public void acceptMessage(Message message, T session) {
         for (MessageHandler<T> handler : handlers) {
-            if(handler.test(message)) {
+            if(handler.test(message, session)) {
                 handler.accept(message, session);
                 return;
             }

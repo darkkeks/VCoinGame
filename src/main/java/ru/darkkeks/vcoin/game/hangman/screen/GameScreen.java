@@ -3,16 +3,16 @@ package ru.darkkeks.vcoin.game.hangman.screen;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.Handlers;
+import ru.darkkeks.vcoin.game.MessageHandler;
 import ru.darkkeks.vcoin.game.Screen;
-import ru.darkkeks.vcoin.game.hangman.Hangman;
-import ru.darkkeks.vcoin.game.hangman.HangmanMessages;
-import ru.darkkeks.vcoin.game.hangman.HangmanSession;
-import ru.darkkeks.vcoin.game.hangman.HangmanState;
+import ru.darkkeks.vcoin.game.hangman.*;
 import ru.darkkeks.vcoin.game.vk.keyboard.ButtonType;
 import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 import ru.darkkeks.vcoin.game.vk.keyboard.KeyboardButton;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class GameScreen extends Screen<HangmanSession> {
@@ -20,14 +20,6 @@ public class GameScreen extends Screen<HangmanSession> {
     private static final Logger logger = LoggerFactory.getLogger(GameScreen.class);
 
     private static final int WRONG_ATTEMPTS = 6;
-
-    private static final String GUESS_PATTERN = "^[ёЁа-яА-Я]+$";
-    private static Map<String, String> CHAR_REPLACE;
-
-    static {
-        CHAR_REPLACE = new HashMap<>();
-        CHAR_REPLACE.put("ё", "е");
-    }
 
     private Hangman hangman;
 
@@ -43,11 +35,20 @@ public class GameScreen extends Screen<HangmanSession> {
         addHandler(Handlers.exactMatch(HangmanMessages.BALANCE, hangman::handleBalance));
         addHandler(Handlers.exactMatch(HangmanMessages.WITHDRAW, hangman::handleWithdraw));
 
-        addHandler(Handlers.regexp(GUESS_PATTERN, (match, session) -> {
+        MessageHandler<HangmanSession> russian = addLangHandler(hangman.getRussian());
+        MessageHandler<HangmanSession> english = addLangHandler(hangman.getEnglish());
+
+        addHandler(Handlers.conditional((message, session) -> session.getState().isEnglish() ? english : russian));
+
+        fallback(Handlers.any((message, session) -> sendGameMessage(session)));
+    }
+
+    private MessageHandler<HangmanSession> addLangHandler(Language language) {
+        return Handlers.regexp(language.getLangPattern(), (match, session) -> {
             HangmanState state = session.getState();
             String guess = match.group().toLowerCase();
 
-            for (Map.Entry<String, String> entry : CHAR_REPLACE.entrySet()) {
+            for (Map.Entry<String, String> entry : language.getReplace().entrySet()) {
                 String from = entry.getKey();
                 String to = entry.getValue();
 
@@ -72,9 +73,7 @@ public class GameScreen extends Screen<HangmanSession> {
 
                 sendGameMessage(session);
             }
-        }));
-
-        fallback(Handlers.any((message, session) -> sendGameMessage(session)));
+        });
     }
 
     public void sendGameMessage(HangmanSession session) {
@@ -105,7 +104,7 @@ public class GameScreen extends Screen<HangmanSession> {
                 String message = String.format(HangmanMessages.GAME_STATUS_MESSAGE, maskedWord, wrong);
 
                 if(session.getState().isDefinition()) {
-                    String definition = hangman.getDescGenerator().getDefinition(state.getWord());
+                    String definition = hangman.getLang(state).getDefinition(state.getWord());
                     message = String.format(HangmanMessages.WORD_DEFINITION, definition) + message;
                 }
 

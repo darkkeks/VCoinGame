@@ -12,6 +12,8 @@ import ru.darkkeks.vcoin.game.vk.keyboard.KeyboardButton;
 
 public class SettingsScreen extends Screen<HangmanSession> {
 
+    private static final String LANGUAGE = "\"language\"";
+
     public SettingsScreen(Hangman hangman) {
         super(SettingsScreen::createKeyboard);
 
@@ -59,12 +61,24 @@ public class SettingsScreen extends Screen<HangmanSession> {
             hangman.getDao().saveState(session.getChatId(), session.getState());
         }));
 
+        addHandler(Handlers.payload(LANGUAGE, session -> {
+            session.getState().toggleEnglish();
+            if(session.getState().isEnglish()) {
+                session.sendMessage(HangmanMessages.ENABLED_ENGLISH_LANGUAGE, getKeyboard(session));
+            } else {
+                session.sendMessage(HangmanMessages.ENABLED_RUSSIAN_LANGUAGE, getKeyboard(session));
+            }
+
+            hangman.getDao().saveState(session.getChatId(), session.getState());
+        }));
+
         addHandler(Handlers.exactMatch(HangmanMessages.GO_BACK, session -> {
             session.setScreen(session.getPreviousScreen());
             session.sendMessage(HangmanMessages.GO_BACK_MESSAGE, session.getScreen().getKeyboard(session));
         }));
 
-        fallback(Handlers.any((message, session) -> session.sendMessage(HangmanMessages.COMMANDS_MESSAGE)));
+        fallback(Handlers.any((message, session) -> session.sendMessage(HangmanMessages.COMMANDS_MESSAGE,
+                getKeyboard(session))));
     }
 
     private static Keyboard createKeyboard(HangmanSession session) {
@@ -97,6 +111,14 @@ public class SettingsScreen extends Screen<HangmanSession> {
             builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.POSITIVE));
         } else {
             builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.NEGATIVE));
+        }
+
+        builder.newRow();
+
+        if (state.isEnglish()) {
+            builder.addButton(new KeyboardButton(HangmanMessages.LANGUAGE_ENGLISH, LANGUAGE, ButtonType.PRIMARY));
+        } else {
+            builder.addButton(new KeyboardButton(HangmanMessages.LANGUAGE_RUSSIAN, LANGUAGE, ButtonType.PRIMARY));
         }
 
         builder.newRow();

@@ -22,13 +22,12 @@ public class WordDescGenerator {
     private ArrayList<String> words;
     private Map<String, String> definitions;
 
-    public WordDescGenerator() {
+    public WordDescGenerator(InputStream wordSource) {
         random = new Random();
         words = new ArrayList<>();
         definitions = new HashMap<>();
 
-        InputStream stream = Launcher.class.getResourceAsStream(WORD_DESC_JSON);
-        JsonArray jsonWords = jsonParser.parse(new InputStreamReader(stream)).getAsJsonArray();
+        JsonArray jsonWords = jsonParser.parse(new InputStreamReader(wordSource)).getAsJsonArray();
 
         jsonWords.forEach(element -> {
             JsonObject object = element.getAsJsonObject();
@@ -48,4 +47,7 @@ public class WordDescGenerator {
         return words.get(random.nextInt(words.size()));
     }
 
+    public ArrayList<String> getWords() {
+        return words;
+    }
 }

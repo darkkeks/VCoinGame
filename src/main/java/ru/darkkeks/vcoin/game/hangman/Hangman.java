@@ -17,9 +17,13 @@ import java.util.function.Consumer;
 
 public class Hangman extends Game<HangmanSession> {
 
-    private static final long DEFINITION_BET = 300_000;
     public static final long BASE_BET = 1_000_000;
+    private static final long DEFINITION_BET = 300_000;
     private static final long MAX_PROFIT = 50_000_000;
+
+    private static final String RU_WORDS = "/ru_words.txt";
+    private static final String RU_WORDS_DESC = "/ru_words_desc.json";
+    private static final String EN_WORDS_DESC = "/en_words_desc.json";
 
     private AppContext context;
     private HangmanDao hangmanDao;
@@ -29,37 +33,41 @@ public class Hangman extends Game<HangmanSession> {
     private WithdrawScreen withdrawScreen;
     private SettingsScreen settingsScreen;
 
-    private WordGenerator generator;
-    private WordDescGenerator descGenerator;
+    private Language russian;
+    private Language english;
 
     public Hangman(AppContext context) {
         this.context = context;
         this.hangmanDao = new HangmanDao(context.getDataSource());
-        this.generator = new WordGenerator();
-        this.descGenerator = new WordDescGenerator();
+
+        russian = new Language(
+                "^[ёЁа-яА-Я]+$",
+                new WordGenerator(Hangman.class.getResourceAsStream(RU_WORDS)),
+                new WordDescGenerator(Hangman.class.getResourceAsStream(RU_WORDS_DESC)));
+
+        russian.addReplace("ё", "е");
+
+        english = new Language(
+                "^[a-zA-Z]+$",
+                new WordDescGenerator(Hangman.class.getResourceAsStream(EN_WORDS_DESC)));
 
         mainScreen = new MainScreen(this);
         gameScreen = new GameScreen(this);
         withdrawScreen = new WithdrawScreen(this);
         settingsScreen = new SettingsScreen(this);
 
-        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
-        ZonedDateTime nextRun = now.withHour(0).withMinute(0).withSecond(0);
-        if(now.compareTo(nextRun) > 0) {
-            nextRun = nextRun.plusDays(1);
-        }
-
-        Duration duration = Duration.between(now, nextRun);
-        long initialDelay = duration.getSeconds();
-
-        context.getExecutorService().scheduleAtFixedRate(hangmanDao::resetProfit, initialDelay,
-                TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+        scheduleProfitReset();
     }
 
     private long getBet(HangmanState state) {
         if(state.isFreeGame()) return 0;
         if(state.isDefinition()) return DEFINITION_BET;
         return BASE_BET;
+    }
+
+    private String getWord(HangmanState state) {
+        Language lang = getLang(state);
+        return state.isDefinition() ? lang.getDescWord() : lang.getWord();
     }
 
     public void startGame(HangmanSession session) {
@@ -74,10 +82,8 @@ public class Hangman extends Game<HangmanSession> {
             session.getState().addCoins(-bet);
             session.getState().addProfit(-bet);
 
-            String word = session.getState().isDefinition() ? descGenerator.getWord() : generator.getWord();
-
             session.getState().setBet(bet);
-            session.getState().setWord(word);
+            session.getState().setWord(getWord(session.getState()));
             session.getState().setGuessedLetters("");
 
             gameScreen.sendGameMessage(session);
@@ -100,6 +106,20 @@ public class Hangman extends Game<HangmanSession> {
         String message = String.format(HangmanMessages.BALANCE_MESSAGE,
                 session.getState().getCoins() / 1000.0);
         session.sendMessage(message, session.getScreen().getKeyboard(session));
+    }
+
+    private void scheduleProfitReset() {
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
+        ZonedDateTime nextRun = now.withHour(0).withMinute(0).withSecond(0);
+        if(now.compareTo(nextRun) > 0) {
+            nextRun = nextRun.plusDays(1);
+        }
+
+        Duration duration = Duration.between(now, nextRun);
+        long initialDelay = duration.getSeconds();
+
+        context.getExecutorService().scheduleAtFixedRate(hangmanDao::resetProfit, initialDelay,
+                TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
     }
 
     @Override
@@ -136,7 +156,15 @@ public class Hangman extends Game<HangmanSession> {
         return context;
     }
 
-    public WordDescGenerator getDescGenerator() {
-        return descGenerator;
+    public Language getLang(HangmanState state) {
+        return state.isEnglish() ? english : russian;
+    }
+
+    public Language getRussian() {
+        return russian;
+    }
+
+    public Language getEnglish() {
+        return english;
     }
 }
