@@ -1,5 +1,6 @@
 package ru.darkkeks.vcoin.game.hangman;
 
+import com.google.gson.Gson;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,25 +20,22 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
     private static final String SELECT = "SELECT * FROM hangman WHERE user_id = ?";
 
     private static final String UPDATE =
-            "INSERT INTO hangman(user_id, coins, bet, word, letters, " +
-                    "showGiveUp, showImage, freeGame, definition, profit, english) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+            "INSERT INTO hangman(user_id, coins, bet, word, letters, profit, settings) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?::json) " +
             "ON CONFLICT (user_id) DO UPDATE SET " +
             "coins = excluded.coins, " +
             "bet = excluded.bet, " +
             "word = excluded.word, " +
             "letters = excluded.letters, " +
-            "showGiveUp = excluded.showGiveUp, " +
-            "showImage = excluded.showImage, " +
-            "freeGame = excluded.freeGame, " +
-            "definition = excluded.definition," +
             "profit = excluded.profit, " +
-            "english = excluded.english";
+            "settings = excluded.settings";
 
     private HikariDataSource dataSource;
+    private Gson gson;
 
     public HangmanDao(HikariDataSource dataSource) {
         this.dataSource = dataSource;
+        this.gson = new Gson();
     }
 
     @Override
@@ -53,12 +51,8 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
                         resultSet.getLong("bet"),
                         resultSet.getString("word"),
                         resultSet.getString("letters"),
-                        resultSet.getBoolean("showGiveUp"),
-                        resultSet.getBoolean("showImage"),
-                        resultSet.getBoolean("freeGame"),
-                        resultSet.getBoolean("definition"),
                         resultSet.getLong("profit"),
-                        resultSet.getBoolean("english"));
+                        gson.fromJson(resultSet.getString("settings"), HangmanSettings.class));
             }
 
             return new HangmanState();
@@ -80,12 +74,8 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
             statement.setLong(3, state.getBet());
             statement.setString(4, state.getWord());
             statement.setString(5, state.getGuessedLetters());
-            statement.setBoolean(6, state.isShowGiveUp());
-            statement.setBoolean(7, state.isShowImage());
-            statement.setBoolean(8, state.isFreeGame());
-            statement.setBoolean(9, state.isDefinition());
-            statement.setLong(10, state.getProfit());
-            statement.setBoolean(11, state.isEnglish());
+            statement.setLong(6, state.getProfit());
+            statement.setString(7, gson.toJson(state.getSettings()));
             statement.executeUpdate();
         } catch (SQLException e) {
             logger.error("Cant save hangman state", e);

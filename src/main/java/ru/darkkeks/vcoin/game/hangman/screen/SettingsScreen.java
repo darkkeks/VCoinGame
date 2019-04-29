@@ -5,72 +5,53 @@ import ru.darkkeks.vcoin.game.Screen;
 import ru.darkkeks.vcoin.game.hangman.Hangman;
 import ru.darkkeks.vcoin.game.hangman.HangmanMessages;
 import ru.darkkeks.vcoin.game.hangman.HangmanSession;
-import ru.darkkeks.vcoin.game.hangman.HangmanState;
+import ru.darkkeks.vcoin.game.hangman.HangmanSettings;
 import ru.darkkeks.vcoin.game.vk.keyboard.ButtonType;
 import ru.darkkeks.vcoin.game.vk.keyboard.Keyboard;
 import ru.darkkeks.vcoin.game.vk.keyboard.KeyboardButton;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
 
 public class SettingsScreen extends Screen<HangmanSession> {
 
     private static final String LANGUAGE = "\"language\"";
 
+    private Hangman hangman;
+
+    private static List<List<Setting>> keyboard;
+
     public SettingsScreen(Hangman hangman) {
         super(SettingsScreen::createKeyboard);
 
-        addHandler(Handlers.exactMatch(HangmanMessages.TOGGLE_GIVE_UP, session -> {
-            session.getState().toggleShowGiveUp();
-            if(session.getState().isShowGiveUp()) {
-                session.sendMessage(HangmanMessages.ENABLED_GIVE_UP_BUTTON, getKeyboard(session));
-            } else {
-                session.sendMessage(HangmanMessages.DISABLED_GIVE_UP_BUTTON, getKeyboard(session));
-            }
+        this.hangman = hangman;
+        keyboard = new ArrayList<>();
 
-            hangman.getDao().saveState(session.getChatId(), session.getState());
-        }));
+        keyboard.add(Arrays.asList(
+                new Setting(s -> s.getState().getSettings().getShowGiveUp(), HangmanMessages.TOGGLE_GIVE_UP,
+                        HangmanMessages.ENABLED_GIVE_UP_BUTTON, HangmanMessages.DISABLED_GIVE_UP_BUTTON),
+                new Setting(s -> s.getState().getSettings().getShowImage(), HangmanMessages.TOGGLE_IMAGE,
+                        HangmanMessages.ENABLED_IMAGE, HangmanMessages.DISABLED_IMAGE)
+        ));
 
-        addHandler(Handlers.exactMatch(HangmanMessages.TOGGLE_IMAGE, session -> {
-            session.getState().toggleShowImage();
-            if(session.getState().isShowImage()) {
-                session.sendMessage(HangmanMessages.ENABLED_IMAGE, getKeyboard(session));
-            } else {
-                session.sendMessage(HangmanMessages.DISABLED_IMAGE, getKeyboard(session));
-            }
+        keyboard.add(Arrays.asList(
+                new Setting(s -> s.getState().getSettings().getFreeGame(), HangmanMessages.FREE_GAME,
+                        HangmanMessages.ENABLED_FREE_GAME, HangmanMessages.DISABLED_FREE_GAME),
+                new Setting(s -> s.getState().getSettings().getDefinition(), HangmanMessages.DEFINITION,
+                        HangmanMessages.ENABLED_DEFINITION, HangmanMessages.DISABLED_DEFINITION)
+        ));
 
-            hangman.getDao().saveState(session.getChatId(), session.getState());
-        }));
+        keyboard.add(Collections.singletonList(
+                new Setting(s -> s.getState().getSettings().getEnglish(),
+                        HangmanMessages.LANGUAGE_ENGLISH, HangmanMessages.ENABLED_ENGLISH_LANGUAGE, ButtonType.PRIMARY,
+                        HangmanMessages.LANGUAGE_RUSSIAN, HangmanMessages.ENABLED_RUSSIAN_LANGUAGE, ButtonType.PRIMARY,
+                        LANGUAGE)
+        ));
 
-        addHandler(Handlers.exactMatch(HangmanMessages.FREE_GAME, session -> {
-            session.getState().toggleFreeGame();
-            if(session.getState().isFreeGame()) {
-                session.sendMessage(HangmanMessages.ENABLED_FREE_GAME, getKeyboard(session));
-            } else {
-                session.sendMessage(HangmanMessages.DISABLED_FREE_GAME, getKeyboard(session));
-            }
-
-            hangman.getDao().saveState(session.getChatId(), session.getState());
-        }));
-
-        addHandler(Handlers.exactMatch(HangmanMessages.DEFINITION, session -> {
-            session.getState().toggleDefinition();
-            if(session.getState().isDefinition()) {
-                session.sendMessage(HangmanMessages.ENABLED_DEFINITION, getKeyboard(session));
-            } else {
-                session.sendMessage(HangmanMessages.DISABLED_DEFINITION, getKeyboard(session));
-            }
-
-            hangman.getDao().saveState(session.getChatId(), session.getState());
-        }));
-
-        addHandler(Handlers.payload(LANGUAGE, session -> {
-            session.getState().toggleEnglish();
-            if(session.getState().isEnglish()) {
-                session.sendMessage(HangmanMessages.ENABLED_ENGLISH_LANGUAGE, getKeyboard(session));
-            } else {
-                session.sendMessage(HangmanMessages.ENABLED_RUSSIAN_LANGUAGE, getKeyboard(session));
-            }
-
-            hangman.getDao().saveState(session.getChatId(), session.getState());
-        }));
+        keyboard.forEach(x -> x.forEach(this::addSetting));
 
         addHandler(Handlers.exactMatch(HangmanMessages.GO_BACK, session -> {
             session.setScreen(session.getPreviousScreen());
@@ -81,50 +62,106 @@ public class SettingsScreen extends Screen<HangmanSession> {
                 getKeyboard(session))));
     }
 
+    private void addSetting(Setting setting) {
+        addHandler(Handlers.payload(setting.getPayload(), session -> {
+            HangmanSettings.BooleanSetting value = setting.get(session);
+            value.toggle();
+            if(value.get()) {
+                session.sendMessage(setting.getEnabledMessage(), getKeyboard(session));
+            } else {
+                session.sendMessage(setting.getDisabledMessage(), getKeyboard(session));
+            }
+
+            hangman.getDao().saveState(session.getChatId(), session.getState());
+        }));
+    }
+
     private static Keyboard createKeyboard(HangmanSession session) {
         Keyboard.Builder builder = Keyboard.builder();
 
-        builder.newRow();
+        keyboard.forEach(row -> {
+            builder.newRow();
 
-        HangmanState state = session.getState();
-        if(state.isShowGiveUp()) {
-            builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_GIVE_UP, ButtonType.POSITIVE));
-        } else {
-            builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_GIVE_UP, ButtonType.NEGATIVE));
-        }
-
-        if(state.isShowImage()) {
-            builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_IMAGE, ButtonType.POSITIVE));
-        } else {
-            builder.addButton(new KeyboardButton(HangmanMessages.TOGGLE_IMAGE, ButtonType.NEGATIVE));
-        }
-
-        builder.newRow();
-
-        if (state.isFreeGame()) {
-            builder.addButton(new KeyboardButton(HangmanMessages.FREE_GAME, ButtonType.POSITIVE));
-        } else {
-            builder.addButton(new KeyboardButton(HangmanMessages.FREE_GAME, ButtonType.NEGATIVE));
-        }
-
-        if (state.isDefinition()) {
-            builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.POSITIVE));
-        } else {
-            builder.addButton(new KeyboardButton(HangmanMessages.DEFINITION, ButtonType.NEGATIVE));
-        }
-
-        builder.newRow();
-
-        if (state.isEnglish()) {
-            builder.addButton(new KeyboardButton(HangmanMessages.LANGUAGE_ENGLISH, LANGUAGE, ButtonType.PRIMARY));
-        } else {
-            builder.addButton(new KeyboardButton(HangmanMessages.LANGUAGE_RUSSIAN, LANGUAGE, ButtonType.PRIMARY));
-        }
+            row.forEach(setting -> {
+                if(setting.get(session).get()) {
+                    builder.addButton(new KeyboardButton(setting.getEnabledButton(),
+                            setting.getPayload(), setting.getEnabledType()));
+                } else {
+                    builder.addButton(new KeyboardButton(setting.getDisabledButton(),
+                            setting.getPayload(), setting.getDisabledType()));
+                }
+            });
+        });
 
         builder.newRow();
         builder.addButton(new KeyboardButton(HangmanMessages.GO_BACK, ButtonType.DEFAULT));
 
         return builder.build();
+    }
+
+    private static class Setting {
+        private Function<HangmanSession, HangmanSettings.BooleanSetting> settingExtractor;
+
+        private String enabledButton;
+        private String enabledMessage;
+        private ButtonType enabledType;
+
+        private String disabledButton;
+        private String disabledMessage;
+        private ButtonType disabledType;
+
+        private String payload;
+
+        public Setting(Function<HangmanSession, HangmanSettings.BooleanSetting> settingExtractor,
+                       String button, String enabledMessage, String disabledMessage) {
+            this(settingExtractor, button, enabledMessage, ButtonType.POSITIVE, button, disabledMessage,
+                    ButtonType.NEGATIVE, button);
+        }
+
+        public Setting(Function<HangmanSession, HangmanSettings.BooleanSetting> settingExtractor,
+                       String enabledButton, String enabledMessage, ButtonType enabledType, String disabledButton,
+                       String disabledMessage, ButtonType disabledType, String payload) {
+            this.settingExtractor = settingExtractor;
+            this.enabledButton = enabledButton;
+            this.enabledMessage = enabledMessage;
+            this.enabledType = enabledType;
+            this.disabledButton = disabledButton;
+            this.disabledMessage = disabledMessage;
+            this.disabledType = disabledType;
+            this.payload = String.format("\"%s\"", payload.replace("\"", "\\\""));
+        }
+
+        public String getEnabledButton() {
+            return enabledButton;
+        }
+
+        public String getEnabledMessage() {
+            return enabledMessage;
+        }
+
+        public ButtonType getEnabledType() {
+            return enabledType;
+        }
+
+        public String getDisabledButton() {
+            return disabledButton;
+        }
+
+        public String getDisabledMessage() {
+            return disabledMessage;
+        }
+
+        public ButtonType getDisabledType() {
+            return disabledType;
+        }
+
+        public String getPayload() {
+            return payload;
+        }
+
+        public HangmanSettings.BooleanSetting get(HangmanSession session) {
+            return settingExtractor.apply(session);
+        }
     }
 
 }

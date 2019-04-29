@@ -60,14 +60,14 @@ public class Hangman extends Game<HangmanSession> {
     }
 
     private long getBet(HangmanState state) {
-        if(state.isFreeGame()) return 0;
-        if(state.isDefinition()) return DEFINITION_BET;
+        if(state.getSettings().getFreeGame().get()) return 0;
+        if(state.getSettings().getDefinition().get()) return DEFINITION_BET;
         return BASE_BET;
     }
 
     private String getWord(HangmanState state) {
         Language lang = getLang(state);
-        return state.isDefinition() ? lang.getDescWord() : lang.getWord();
+        return state.getSettings().getDefinition().get() ? lang.getDescWord() : lang.getWord();
     }
 
     public void startGame(HangmanSession session) {
@@ -157,7 +157,7 @@ public class Hangman extends Game<HangmanSession> {
     }
 
     public Language getLang(HangmanState state) {
-        return state.isEnglish() ? english : russian;
+        return state.getSettings().getEnglish().get() ? english : russian;
     }
 
     public Language getRussian() {

@@ -38,7 +38,9 @@ public class GameScreen extends Screen<HangmanSession> {
         MessageHandler<HangmanSession> russian = addLangHandler(hangman.getRussian());
         MessageHandler<HangmanSession> english = addLangHandler(hangman.getEnglish());
 
-        addHandler(Handlers.conditional((message, session) -> session.getState().isEnglish() ? english : russian));
+        addHandler(Handlers.conditional((message, session) -> {
+            return session.getState().getSettings().getEnglish().get() ? english : russian;
+        }));
 
         fallback(Handlers.any((message, session) -> sendGameMessage(session)));
     }
@@ -103,7 +105,7 @@ public class GameScreen extends Screen<HangmanSession> {
 
                 String message = String.format(HangmanMessages.GAME_STATUS_MESSAGE, maskedWord, wrong);
 
-                if(session.getState().isDefinition()) {
+                if(session.getState().getSettings().getDefinition().get()) {
                     String definition = hangman.getLang(state).getDefinition(state.getWord());
                     message = String.format(HangmanMessages.WORD_DEFINITION, definition) + message;
                 }
@@ -141,7 +143,7 @@ public class GameScreen extends Screen<HangmanSession> {
     }
 
     private void sendMessageWithHealth(String message, int wrong, HangmanSession session) {
-        if(session.getState().isShowImage()) {
+        if(session.getState().getSettings().getShowImage().get()) {
             session.sendMessage(message, HangmanMessages.IMAGES[wrong], session.getScreen().getKeyboard(session));
         } else {
             message += String.format(HangmanMessages.HEALTH_MESSAGE,
@@ -153,7 +155,7 @@ public class GameScreen extends Screen<HangmanSession> {
     private static Keyboard createKeyboard(HangmanSession session) {
         Keyboard.Builder builder = Keyboard.builder();
 
-        if (session.getState().isShowGiveUp()) {
+        if (session.getState().getSettings().getShowGiveUp().get()) {
             builder.newRow();
             builder.addButton(new KeyboardButton(HangmanMessages.GIVE_UP, ButtonType.NEGATIVE));
         }
