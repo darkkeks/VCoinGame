@@ -131,6 +131,7 @@ public class GameScreen extends Screen<HangmanSession> {
         sendMessageWithHealth(message, wrong, session);
 
         if(win) {
+            state.incrementWins();
             state.addCoins(state.getBet() * 2);
             state.addProfit(state.getBet() * 2);
         }

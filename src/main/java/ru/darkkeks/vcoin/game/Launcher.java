@@ -2,6 +2,7 @@ package ru.darkkeks.vcoin.game;
 
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
+import com.vk.api.sdk.client.actors.UserActor;
 import com.vk.api.sdk.exceptions.ApiException;
 import com.vk.api.sdk.exceptions.ClientException;
 import com.vk.api.sdk.httpclient.HttpTransportClient;
@@ -38,6 +39,9 @@ public class Launcher {
     private static final int GROUP_ID = Integer.valueOf(getEnv("GROUP_ID"));
     private static final String GROUP_TOKEN = getEnv("GROUP_TOKEN");
 
+    private static final int TOP_GROUP_ID = Integer.valueOf(getEnv("TOP_GROUP_ID"));
+    private static final String TOP_GROUP_TOKEN = getEnv("TOP_GROUP_TOKEN");
+
     private static final String DATABASE_URL = getEnv("DATABASE_URL");
     private static final String DATABASE_USERNAME = getEnv("DATABASE_USERNAME");
     private static final String DATABASE_PASSWORD = getEnv("DATABASE_PASSWORD");
@@ -52,6 +56,7 @@ public class Launcher {
         context.setTransportClient(new HttpTransportClient());
         context.setVk(new VkApiClient(context.getTransportClient()));
         context.setActor(new GroupActor(GROUP_ID, GROUP_TOKEN));
+        context.setTopActor(new UserActor(TOP_GROUP_ID, TOP_GROUP_TOKEN));
         context.setVCoinApi(new VCoinApi(VCOIN_ID, VCOIN_KEY, VCOIN_PAYLOAD, context));
         context.setDataSource(createDataSource());
         context.setMessageBatcher(new MessageBatcher(context));

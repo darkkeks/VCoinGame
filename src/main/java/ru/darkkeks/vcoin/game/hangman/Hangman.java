@@ -1,5 +1,9 @@
 package ru.darkkeks.vcoin.game.hangman;
 
+import com.vk.api.sdk.exceptions.ApiException;
+import com.vk.api.sdk.exceptions.ClientException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.darkkeks.vcoin.game.AppContext;
 import ru.darkkeks.vcoin.game.Game;
 import ru.darkkeks.vcoin.game.Screen;
@@ -9,13 +13,19 @@ import ru.darkkeks.vcoin.game.hangman.screen.MainScreen;
 import ru.darkkeks.vcoin.game.hangman.screen.SettingsScreen;
 import ru.darkkeks.vcoin.game.hangman.screen.WithdrawScreen;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class Hangman extends Game<HangmanSession> {
+
+    private static final Logger logger = LoggerFactory.getLogger(Hangman.class);
 
     public static final long BASE_BET = 1_000_000;
     private static final long DEFINITION_BET = 300_000;
@@ -56,7 +66,7 @@ public class Hangman extends Game<HangmanSession> {
         withdrawScreen = new WithdrawScreen(this);
         settingsScreen = new SettingsScreen(this);
 
-        scheduleProfitReset();
+        scheduleStatsReset();
     }
 
     private long getBet(HangmanState state) {
@@ -108,7 +118,7 @@ public class Hangman extends Game<HangmanSession> {
         session.sendMessage(message, session.getScreen().getKeyboard(session));
     }
 
-    private void scheduleProfitReset() {
+    private void scheduleStatsReset() {
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Europe/Moscow"));
         ZonedDateTime nextRun = now.withHour(0).withMinute(0).withSecond(0);
         if(now.compareTo(nextRun) > 0) {
@@ -118,8 +128,38 @@ public class Hangman extends Game<HangmanSession> {
         Duration duration = Duration.between(now, nextRun);
         long initialDelay = duration.getSeconds();
 
-        context.getExecutorService().scheduleAtFixedRate(hangmanDao::resetProfit, initialDelay,
-                TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+        context.getExecutorService().scheduleAtFixedRate(() -> {
+            generateTop();
+
+            hangmanDao.resetStats();
+            getSessions().values().forEach(session -> {
+                session.getState().resetWins();
+                session.getState().addProfit(-session.getState().getProfit());
+            });
+        }, initialDelay, TimeUnit.DAYS.toSeconds(1), TimeUnit.SECONDS);
+    }
+
+    private void generateTop() {
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM");
+        String date = format.format(new Date());
+        postTop("Топ-10 по количеству выигранных игр [%s]#%s", date, hangmanDao.getWinTop());
+        postTop("Топ-10 по количеству выигранных коинов [%s]#%s", date, hangmanDao.getProfitTop());
+        postTop("Топ-10 по количеству купленных коинов [%s]#%s", date, hangmanDao.getBuyTop());
+    }
+
+    private void postTop(String template, String date, List<HangmanDao.TopEntry> top) {
+        String data = top.stream().map(x -> x.getUserId() + " " + x.getValue())
+                .collect(Collectors.joining("#"));
+        String content = String.format(template, date, data);
+        try {
+            context.getVk().wall()
+                    .post(context.getTopActor())
+                    .ownerId(context.getActor().getId())
+                    .message(content)
+                    .execute();
+        } catch (ApiException | ClientException e) {
+            logger.error("Can't post top", e);
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package ru.darkkeks.vcoin.game;
 import com.vk.api.sdk.client.TransportClient;
 import com.vk.api.sdk.client.VkApiClient;
 import com.vk.api.sdk.client.actors.GroupActor;
+import com.vk.api.sdk.client.actors.UserActor;
 import com.zaxxer.hikari.HikariDataSource;
 import ru.darkkeks.vcoin.game.api.VCoinApi;
 import ru.darkkeks.vcoin.game.vk.FollowerManager;
@@ -15,6 +16,7 @@ public class AppContext {
     private VCoinApi vCoinApi;
     private VkApiClient vk;
     private GroupActor actor;
+    private UserActor topActor;
     private TransportClient transportClient;
     private ScheduledExecutorService executorService;
     private HikariDataSource dataSource;
@@ -63,6 +65,14 @@ public class AppContext {
 
     public void setActor(GroupActor actor) {
         this.actor = actor;
+    }
+
+    public UserActor getTopActor() {
+        return topActor;
+    }
+
+    public void setTopActor(UserActor topActor) {
+        this.topActor = topActor;
     }
 
     public void setTransportClient(TransportClient transportClient) {

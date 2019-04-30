@@ -7,20 +7,22 @@ public class HangmanState {
     private String word;
     private String guessedLetters;
     private long profit;
+    private int wins;
 
     private HangmanSettings settings;
 
     public HangmanState() {
-        this(Hangman.BASE_BET, 0, null, null, 0, new HangmanSettings());
+        this(Hangman.BASE_BET, 0, null, null, 0, 0, new HangmanSettings());
     }
 
-    public HangmanState(long coins, long bet, String word, String guessedLetters, long profit,
+    public HangmanState(long coins, long bet, String word, String guessedLetters, long profit, int wins,
                         HangmanSettings settings) {
         this.coins = coins;
         this.bet = bet;
         this.word = word;
         this.guessedLetters = guessedLetters;
         this.profit = profit;
+        this.wins = wins;
         this.settings = settings;
     }
 
@@ -70,5 +72,17 @@ public class HangmanState {
 
     public HangmanSettings getSettings() {
         return settings;
+    }
+
+    public void incrementWins() {
+        wins++;
+    }
+
+    public int getWins() {
+        return wins;
+    }
+
+    public void resetWins() {
+        wins = 0;
     }
 }

@@ -18,6 +18,10 @@ public abstract class Game<T extends GameSession> {
         return sessions.computeIfAbsent(chatId, this::createSession);
     }
 
+    protected Map<Integer, T> getSessions() {
+        return sessions;
+    }
+
     protected abstract T createSession(int chatId);
     protected abstract Consumer<Transaction> getTransferConsumer();
 }
