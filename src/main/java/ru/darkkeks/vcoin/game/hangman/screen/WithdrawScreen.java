@@ -30,7 +30,8 @@ public class WithdrawScreen extends Screen<HangmanSession> {
 
 
     private void handleAmount(Matcher matcher, HangmanSession session) {
-        double floatAmount = Double.valueOf(matcher.group());
+        String value = matcher.group().replace(',', '.');
+        double floatAmount = Double.valueOf(value);
         long amount = Math.round(floatAmount * 1000);
 
         Screen<HangmanSession> screen = session.getPreviousScreen();
