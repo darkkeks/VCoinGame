@@ -19,7 +19,7 @@ public class HangmanDao implements StateDao<Integer, HangmanState> {
 
     private static final String RESET_STATS = "UPDATE hangman SET profit = 0, wins = 0 WHERE profit != 0 or wins != 0";
 
-    private static final String TOP_PROFIT = "SELECT user_id, profit, RANK() over (ORDER BY profit DESC) " +
+    private static final String TOP_PROFIT = "SELECT user_id, profit / 1000, RANK() over (ORDER BY profit DESC) " +
             "FROM hangman LIMIT 10";
 
     private static final String TOP_WIN = "SELECT user_id, wins, RANK() over (ORDER BY wins DESC) " +

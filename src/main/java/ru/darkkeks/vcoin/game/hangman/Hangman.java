@@ -154,7 +154,7 @@ public class Hangman extends Game<HangmanSession> {
         try {
             context.getVk().wall()
                     .post(context.getTopActor())
-                    .ownerId(context.getActor().getId())
+                    .ownerId(context.getTopActor().getId())
                     .message(content)
                     .execute();
         } catch (ApiException | ClientException e) {
