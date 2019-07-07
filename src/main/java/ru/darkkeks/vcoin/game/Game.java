@@ -1,24 +1,36 @@
 package ru.darkkeks.vcoin.game;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import ru.darkkeks.vcoin.game.api.Transaction;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 public abstract class Game<T extends GameSession> {
 
-    private Map<Integer, T> sessions;
+    private LoadingCache<Integer, T> sessions;
 
     protected Game() {
-        this.sessions = new ConcurrentHashMap<>();
+        this.sessions = CacheBuilder.newBuilder().weakValues().build(new CacheLoader<Integer, T>() {
+            @Override
+            public T load(Integer key) {
+                return createSession(key);
+            }
+        });
     }
 
     public T getSession(int chatId) {
-        return sessions.computeIfAbsent(chatId, this::createSession);
+        try {
+            return sessions.get(chatId);
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
-    protected Map<Integer, T> getSessions() {
+    protected LoadingCache<Integer, T> getSessions() {
         return sessions;
     }
 

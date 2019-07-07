@@ -132,7 +132,7 @@ public class Hangman extends Game<HangmanSession> {
             generateTop();
 
             hangmanDao.resetStats();
-            getSessions().values().forEach(session -> {
+            getSessions().asMap().values().forEach(session -> {
                 session.getState().resetWins();
                 session.getState().addProfit(-session.getState().getProfit());
             });
