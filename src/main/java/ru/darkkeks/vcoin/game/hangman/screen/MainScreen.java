@@ -19,14 +19,14 @@ public class MainScreen extends Screen<HangmanSession> {
         super(new StaticKeyboard<>(Keyboard.builder()
                 .newRow()
                 .addButton(new KeyboardButton(HangmanMessages.PLAY, ButtonType.POSITIVE))
-                .addButton(new KeyboardButton(HangmanMessages.SETTINGS, ButtonType.POSITIVE))
-                .newRow()
-                .addButton(new KeyboardButton(HangmanMessages.RULES, ButtonType.PRIMARY))
-                .addButton(new KeyboardButton(HangmanMessages.BUY, ButtonType.NEGATIVE))
+                .addButton(new KeyboardButton(HangmanMessages.BALANCE, ButtonType.POSITIVE))
                 .newRow()
                 .addButton(new KeyboardButton(HangmanMessages.DEPOSIT, ButtonType.DEFAULT))
-                .addButton(new KeyboardButton(HangmanMessages.BALANCE, ButtonType.DEFAULT))
                 .addButton(new KeyboardButton(HangmanMessages.WITHDRAW, ButtonType.DEFAULT))
+                // .addButton(new KeyboardButton(HangmanMessages.BUY, ButtonType.NEGATIVE))
+                .newRow()
+                .addButton(new KeyboardButton(HangmanMessages.RULES, ButtonType.PRIMARY))
+                .addButton(new KeyboardButton(HangmanMessages.SETTINGS, ButtonType.PRIMARY))
                 .build()));
 
         addHandler(Handlers.exactMatch(HangmanMessages.PLAY, hangman::startGame));
@@ -35,10 +35,10 @@ public class MainScreen extends Screen<HangmanSession> {
             session.sendMessage(HangmanMessages.RULES_MESSAGE, getKeyboard(session));
         }));
 
-        addHandler(Handlers.exactMatch(HangmanMessages.BUY, session -> {
-            String url = String.format(MERCHANT_URL, session.getChatId());
-            session.sendMessage(String.format(HangmanMessages.BUY_MESSAGE, url), getKeyboard(session));
-        }));
+        // addHandler(Handlers.exactMatch(HangmanMessages.BUY, session -> {
+        //     String url = String.format(MERCHANT_URL, session.getChatId());
+        //     session.sendMessage(String.format(HangmanMessages.BUY_MESSAGE, url), getKeyboard(session));
+        // }));
 
         addHandler(Handlers.exactMatch(HangmanMessages.SETTINGS, session -> {
             SettingsScreen screen = hangman.getSettingsScreen();
